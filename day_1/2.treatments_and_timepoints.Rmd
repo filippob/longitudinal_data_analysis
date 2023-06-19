@@ -210,4 +210,48 @@ print(solve(XX))
 
 #### And the p-value?
 
+First, we need to estimate the variance of our target variable:
+
+$$
+\hat{\sigma}^2 = \frac{1}{(n-2)}\sum(y_i-\hat{y}_i)^2
+$$
+
+The $(n-2)$ comes from $(n - (k+1)$, where $k$ is the length of the vector of parameters $\mathbf{b}$ - 1 (to remove the intercept)
+(we typically look at parameters one by one)
+
+```{r}
+n = nrow(temp) ## sample size
+y_hat = X %*% b ## predictions/fitted values
+variance = sum(residuals^2)/(n-2)
+print(variance)
+```
+
+$$
+\text{Var}(\hat{\beta}) = \frac{\hat{\sigma}^2}{\sum(x_i-\overline{x})^2}
+$$
+
+```{r}
+x_avg = mean(X[,2])
+var_beta = variance/sum((X[,2]-x_avg)^2)
+```
+
+Now, the standard error of the estimate is the square root of its variance:
+
+```{r}
+std_err_beta = sqrt(var_beta)
+print(std_err_beta)
+```
+
+You can compare this with the results from the `lm()` *R* function:
+
+```{r}
+summary(fit)
+```
+
+```{r}
+tstat = b[2]/std_err_beta
+df = n - length(b) ## degrees of freedom
+pval = 2*pt(tstat, df = df, lower.tail = TRUE)
+print(pval) ## by default a two-tailed test is performed
+```
 
