@@ -1,0 +1,24 @@
+
+Data from: The effects of lateral line ablation and regeneration in schooling giant danios
+
+https://journals.biologists.com/jeb/article/221/8/jeb175166/300/The-effects-of-lateral-line-ablation-and
+https://zenodo.org/record/4999506
+
+
+Position measurements from schooling giant danios
+The data file contains the processed data for each individual fish measured at each time point. 
+The data is categorized by treatment and week number. 
+
+- Treatment describes the type of chemical used to ablate the lateral line system. 
+- Week describes the treatment groups and the time point through eight weeks. 
+
+The five main metrics described in our paper are the following: 
+i) nearest neighbor distance or NND (unit: body length), 
+ii) time in school (percentage), 
+iii) angular bearing (unit: degrees), 
+iv) angular elevation (unit: degrees), 
+v) speed (body length per second).
+
+
+Fish use multiple sensory systems, including vision and their lateral line system, to maintain position and speed within a school. Although previous studies have shown that ablating the lateral line alters schooling behavior, no one has examined how the behavior recovers as the sensory system regenerates. We studied how schooling behavior changes in giant danios Devario aequipinnatus when their lateral line system is chemically ablated and after the sensory hair cells regenerate. We found that fish could school normally immediately after chemical ablation, but that they had trouble schooling one to two weeks after the chemical treatment, when the hair cells had fully regenerated. We filmed groups of giant danios with two high-speed cameras and reconstructed the 3D positions of each fish within a group. One fish in the school was treated with gentamycin to ablate all hair cells. Both types of neuromasts, canal and superficial, were completely ablated after treatment but fully regenerated after one week. We quantified the structure of the school using nearest neighbor distance, bearing, elevation, and the cross-correlation of velocity between each pair of fish. Treated fish maintained a normal position within the school immediately after the lateral line ablation, but could not school normally one or two weeks after treatment, even though the neuromasts had fully regenerated. By four to eight weeks post-treatment, the treated fish could again school normally. These results demonstrate that the behavioral recovery after lateral line ablation is a longer process than the regeneration of the hair cells themselves.
+
