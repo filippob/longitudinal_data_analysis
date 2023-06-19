@@ -1,0 +1,81 @@
+---
+title: 'Timepoints and treatments: exercise'
+author: "Filippo Biscarini"
+date: "2023-06-19"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library("DT")
+library("broom")
+library("knitr")
+library("ggpubr")
+library("contrast")
+library("tidyverse")
+library("data.table")
+
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## Read the data
+
+Data from [The early bird gets the worm: foraging strategies of wild songbirds lead to the early discovery of food sources](https://royalsocietypublishing.org/doi/10.1098/rsbl.2013.0578)
+(data repo [here](https://zenodo.org/record/4936819))
+
+It's data on time needed to discover food sources in songbirds.
+
+```{r read-the-bird-data}
+basefolder = "/home/filippo/Dropbox/cursos/longitudinal_data_analysis/longitudinal_data_analysis"
+inpfile = "data/bird_food/discovery_individuals.csv"
+fname = file.path(basefolder, inpfile)
+
+birds = fread(fname)
+```
+
+Dataset on wild songbirds and their foraging habits (from here: "The early bird gets the worm", https://zenodo.org/record/4936819).
+
+The target variable is *time to discovery* (of food: continuous, in seconds).
+Explanatory variables include:
+
+- `TREATMENT`: morning / afternoon
+- `HALFHOUR`: time during the day
+- `SITE`: geographic place
+- `WEEK`: replicates over two weeks
+
+
+We can consider *week* to be a replicate of the experiment (two different weeks, like two random replicates),
+and we can combine the part of the day (morning/afternoon) and half hour to have a unique expression of the time of the day.
+
+This will lead to the following model.
+
+$$
+\text{TIME.TO.DISC} = \mu + time + \beta_1 \text{time} + \beta_2 \text{SITE} + e
+$$
+
+### Task 1: preprocessing - modify the dataset
+
+```{r}
+## your code here!
+```
+
+### Task 2: EDA
+
+```{r}
+## your code here!
+```
+
+### Task 3: choose and fit your model
+
+```{r}
+## your code here!
+```
+
+### Task 4: visualize and interpret results
+
+```{r}
+## your code here!
+```
+
+
+
