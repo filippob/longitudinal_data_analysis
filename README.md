@@ -26,5 +26,4 @@ As a general rule, we'll have a longer break (30 minutes) at 16:00 and two short
     - [Tidyverse intro (pdf)](slides/Tidyverse_Intro.pdf)
 - Lab 3 - Description of Datasets [Christian]
     - [Description of Datasets](slides/Description_of_data.pdf)
- - [Course Manual](slides/gwas_manual.pdf)
- - [GWAS Workflow](slides/GWAS_workflow.pdf)
+
