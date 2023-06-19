@@ -13,26 +13,35 @@ library("data.table")
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## Linear models
+## Longitudinal data
 
-Faraway
+In this R notebook we will get introduced to examples of longitudinal data, i.e. data with a **time component**:
 
 $$
-y = \mu + \beta x + e
-$$ \### Read data
+y = \mu + \beta_1 \text{time} + \beta_2 \text{treatment} + e
+$$
+
+## Read data
+
+Data from [Spatiotemporally explicit model averaging for forecasting of Alaskan groundfish catch](https://onlinelibrary.wiley.com/doi/10.1002/ece3.4488)
+(data repo [here](https://zenodo.org/record/4987796#.ZHcLL9JBxhE))
+
+It's data on fish catch (multiple fish species) over time in different regions of Alaska.
+
+```{r read-the-data}
+basefolder = "/home/filippo/Dropbox/cursos/longitudinal_data_analysis/longitudinal_data_analysis"
+inpfile = "data/alaska_groundfish_catch/stema_data.csv"
+fname = file.path(basefolder, inpfile)
+
+fish = fread(fname)
+```
 
 -   **CPUE**: target variable, "catch per unit effort"
 -   **SST**: sea surface temperature
 -   **CV**: actually, the coefficient of variation for SST is used $\rightarrow$ the coefficient of variation is an improved measure of seasonal SST over the mean, because it standardizes scale and allows us to consider the changes in variation of SST with the changes in mean over (Hannah Correia, 2018 - Ecology and Evolution)
 -   **SSTcvW1-5**: CPUE is influenced by survival in the first year of life. Water temperature affects survival, and juvenile fish are more susceptible to environmental changes than adults. Therefore, CPUE for a given year is likely linked to the winter SST at the juvenile state. Since this survey targets waters during the summer and the four species covered reach maturity at 5--8 years, SST was lagged for years one through five to allow us to capture the effect of SST on the juvenile stages. All five lagged SST measures were included for modeling.
 
-```{r read-the-data}
-basefolder = "/home/filippo/Dropbox/cursos/longitudinal_data_analysis"
-inpfile = "data/alaska_groundfish_catch/stema_data.csv"
-fname = file.path(basefolder, inpfile)
-
-fish = fread(fname)
-```
+### Data preprocessing
 
 ```{r preprocess}
 fish <- fish |>
@@ -61,7 +70,7 @@ fish <- fish |>
 fish |> filter(Species == "Pacific cod", Area == "West Yakutat", Year == "1990")
 ```
 
-### EDA
+### EDA (Exploratory Data Analysis)
 
 Let's start by looking at the raw data. As we already saw, for each combination of species, area and year we have multiple observations; for instance, let's look at `Pacific cod` from `West Yakutat` in year `2000`. Therefore, a boxplot is a good way to plot these data:
 
@@ -153,6 +162,7 @@ p <- ggplot(temp, aes(Year, CPUE)) + geom_line(aes(color = Area))
 p <- p + facet_wrap(~Species)
 p
 ```
+
 **Q: Do we have a trend?**
 
 What about the standard deviation? Let's see if we have a trend there (!! remember, we introduced artificial random variation, no trend is actually expected, safe by chance !!):
@@ -180,6 +190,7 @@ p <- ggplot(temp, aes(Year, `sd(CPUE)`)) + geom_line(aes(color = Area))
 p <- p + facet_wrap(~Species)
 p
 ```
+
 **Q: What do you notice?**
 
 ### Model-based adjustments
@@ -223,17 +234,8 @@ p
 
 ## Exercise
 
-1. Within populations, the expression of phenotypic traits typically varies with age. Such age-dependent trait variation can be caused by within-individual change (improvement, senescence, terminal effects) and/or selective (dis)appearance of certain phenotypes among older age classes. 
-
-2. within-individual change and selective (dis)appearance, in a long-lived seabird, the common tern (Sterna hirundo). 
-
-3. At the population level, all traits, except the probability to breed, improved with age (i.e., phenology advanced and reproductive output increased). Both methods identified within-individual change as the main responsible process, and within individuals, performance improved until age 6-13, before levelling off. In contrast, within individuals, breeding probability decreased to age 10, then levelled off. 
-
-OPTIONS:
-- look at males vs females across time
-- look at males vs females in two/three groups: young, intermediate, old birds
-
-Target variables can be: laying date or egg volume (approximately continuous variables)
+Data from the article "[Age-dependent trait variation: the relative contribution of within-individual change, selective appearance and disappearance in a long-lived seabird](https://besjournals.onlinelibrary.wiley.com/doi/10.1111/1365-2656.12321)"
+(data repo [here](https://zenodo.org/record/5010983))
 
 ```{r read-the-cow-data}
 basefolder = "/home/filippo/Dropbox/cursos/longitudinal_data_analysis"
@@ -243,15 +245,23 @@ fname = file.path(basefolder, inpfile)
 seabirds = readxl::read_xlsx(fname)
 ```
 
+1. Within populations, the expression of phenotypic traits typically varies with age. Such age-dependent trait variation can be caused by within-individual change (improvement, senescence, terminal effects) and/or selective (dis)appearance of certain phenotypes among older age classes. 
+
+2. within-individual change and selective (dis)appearance, in a long-lived seabird, the common tern (*Sterna hirundo*). 
+
+3. At the population level, all traits, except the probability to breed, improved with age (i.e., phenology advanced and reproductive output increased). Both methods identified within-individual change as the main responsible process, and within individuals, performance improved until age 6-13, before levelling off. In contrast, within individuals, breeding probability decreased to age 10, then levelled off. 
+
+OPTIONS:
+- look at males vs females across time
+- look at males vs females in two/three groups: young, intermediate, old birds
+
+Target variables can be: laying date or egg volume (approximately continuous variables)
+
 ```{r}
-table(cows$nl)
+## your code here
 ```
 
-Few cows with late parities, hence we group them:
 
-```{r}
-cows$parity <- cut(x = cows$nl, breaks = c(0,1,2,3,4,5,Inf), labels = c("1","2","3","4","5","6+"))
-```
 
 
 
