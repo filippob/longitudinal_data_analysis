@@ -7,8 +7,10 @@ output: html_document
 
 ```{r setup, include=FALSE}
 library("DT")
+library("broom")
 library("knitr")
 library("ggpubr")
+library("contrast")
 library("tidyverse")
 library("data.table")
 
@@ -75,8 +77,7 @@ p <- ggpar(p, palette = c("#00AFBB", "#E7B800", "#FC4E07"))
 p
 ```
 
-From reading the article, we expect the treatment to have an effect a little time after the application of gentamycin (vs control/sham) 
-and then to see restoration when the cells of the lateral line system are regenerated.
+From reading the article, we expect the treatment to have an effect a little time after the application of gentamycin (vs control/sham) and then to see restoration when the cells of the lateral line system are regenerated.
 
 **Q: which target variables better show this expected pattern?**
 
@@ -115,9 +116,9 @@ datatable(dd, options=list(columnDefs = list(list(visible=FALSE, targets=c(5))),
 
 ## Models of analysis
 
-1. treatment within timepoint
-2. treatment + timepoint
-3. treatment + timepoint + (treatment x timepoint)
+1.  treatment within timepoint
+2.  treatment + timepoint
+3.  treatment + timepoint + (treatment x timepoint)
 
 ### Within timepoint
 
@@ -155,11 +156,11 @@ $$
 \mathbf{X'y} = \mathbf{X'Xb}
 $$
 
-- **X**: (n,m) = (50, 2) [50 records, 2 parameters: intercept and slope]
-- **y**: (n,1)
-- **X'y**: (m,1) = (2,1)
-- **X'X**: (m,m) = (2,2)
-- **b**: (m,1) = (2,1)
+-   **X**: (n,m) = (50, 2) [50 records, 2 parameters: intercept and slope]
+-   **y**: (n,1)
+-   **X'y**: (m,1) = (2,1)
+-   **X'X**: (m,m) = (2,2)
+-   **b**: (m,1) = (2,1)
 
 ```{r}
 Xy = t(X) %*% y
@@ -175,8 +176,7 @@ b = solve(XX) %*% Xy
 print(b)
 ```
 
-We see that this involves matrix inversion.
-Since this is a 2x2 matrix, we could do it by hand (for fun! But don't worry: R will take care of matrix inversion for this and -much- larger matrices).
+We see that this involves matrix inversion. Since this is a 2x2 matrix, we could do it by hand (for fun! But don't worry: R will take care of matrix inversion for this and -much- larger matrices).
 
 $$
 \begin{bmatrix}
@@ -216,12 +216,12 @@ $$
 \hat{\sigma}^2 = \frac{1}{(n-2)}\sum(y_i-\hat{y}_i)^2
 $$
 
-The $(n-2)$ comes from $(n - (k+1)$, where $k$ is the length of the vector of parameters $\mathbf{b}$ - 1 (to remove the intercept)
-(we typically look at parameters one by one)
+The $(n-2)$ comes from $(n - (k+1)$, where $k$ is the length of the vector of parameters $\mathbf{b}$ - 1 (to remove the intercept) (we typically look at parameters one by one)
 
 ```{r}
 n = nrow(temp) ## sample size
 y_hat = X %*% b ## predictions/fitted values
+residuals = y-y_hat
 variance = sum(residuals^2)/(n-2)
 print(variance)
 ```
@@ -252,6 +252,129 @@ summary(fit)
 tstat = b[2]/std_err_beta
 df = n - length(b) ## degrees of freedom
 pval = 2*pt(tstat, df = df, lower.tail = TRUE)
-print(pval) ## by default a two-tailed test is performed
+print(pval) ## by default a two-tailed test is performed (look at the output from the summary() function!!)
 ```
 
+#### ANOVA
+
+Alternatively, the same results could be obtained with the Analysis of Variance (ANOVA). More specifically, in this case, one-way ANOVA (only one explanatory variable)
+
+```{r}
+ggline(temp, x = "Treatment", y = "value", 
+       add = c("mean_se", "jitter"), 
+       order = c("Sham", "Gentamycin"),
+       ylab = "Time in School", xlab = "Treatment")
+```
+
+```{r}
+# Compute the analysis of variance
+res.aov <- aov(value ~ Treatment, data = temp)
+# Summary of the analysis
+summary(res.aov)
+```
+
+**Anova and linear regression are equivalent!**
+
+#### Apply the within-timepoint analysis to all timepoints
+
+We now take the model used for week 2 and apply it to all weeks (all timepoints): `lm(value ~ Treatment, data = temp)`
+
+```{r}
+results = school_time |>
+  group_by(Week) |>
+  do(tidy(lm(value ~ Treatment, data = .))) |>
+  filter(term != "(Intercept)") ## we remove the Intercept estimate and visualize only the effect of treatment
+```
+
+```{r}
+datatable(results) |> 
+  # formatStyle('Week', fontWeight = styleInterval(c(2,4), c('normal', 'bold','normal'))) |>
+  formatStyle(
+    'p.value',
+    target = 'row',
+    fontWeight = styleInterval(c(0.05), c('bold', 'normal')),
+    # color = styleInterval(c(20, 40), c('white', 'blue', 'red')),
+    backgroundColor = styleInterval(0.05, c('yellow', 'white'))
+)
+```
+
+### Exercise
+
+Pick another target variable and apply the within-timepoint linear regression analysis:
+
+```{r}
+## your code here!
+```
+
+
+### Across-timepoint analysis
+
+We now use a more complex model of analysis, which uses all the data at once and includes both the effect of timepoint and the effect of treatment:
+
+$$
+\text{Time in School} = \mu + \beta_1 \text{Timepoint} + \beta_2 \text{Treatment} + e
+$$
+
+Again, we use `Time in School` as target:
+
+```{r}
+school_time = filter(mD, target == "Time in School") ## !! REMEMBER THAT WE SELECTED ONE TARGET VARIABLE, Time in School !!
+school_time$Treatment <- factor(school_time$Treatment, levels = c("Sham", "Gentamycin"))
+```
+
+```{r}
+fit = lm(value ~ Week + Treatment, data = school_time)
+summary(fit)
+```
+
+The output above shows:
+
+- overall $R^2$ of the model
+- overall p-value of the model
+- estimates of single coefficients (with respect to the reference class)
+- p-values for the single coefficients (under the null hypothesis that they're equal to zero)
+
+We can look also at the global contribution of the two effects included in the model (not the levels of such effects):
+
+```{r}
+anova(fit)
+```
+
+Specific contrasts between levels of the categorical explanatory variables can be obtained with a number of ways.
+E.g., buy using the `TukeyHSD()` function (e.g. [here](https://en.wikipedia.org/wiki/Tukey%27s_range_test)) which requires an `aov` object:
+
+```{r}
+res.aov = aov(value ~ Week + Treatment, data = school_time)
+TukeyHSD(res.aov)
+```
+
+Alternatively, the `contrast` *R* package provides the `contrast()` function:
+
+```{r}
+contrast(fit, 
+         list(Week = "2", Treatment = "Sham"),
+         list(Week = "2", Treatment = "Gentamycin"))
+```
+
+```{r}
+contrast(fit, 
+         list(Week = "-1", Treatment = "Sham"),
+         list(Week = "8", Treatment = "Sham"))
+```
+
+In this notebook, we don't delve much into details on contrasts, though.
+
+### Interaction model
+
+Finally, we can include in the model also the interaction between timepoint and treatment:
+
+$$
+\text{Time in School} = \mu + \beta_1 \text{Timepoint} + \beta_2 \text{Treatment} + \beta_3 (\text{Timepoint} * \text{Treatment}) + e
+$$
+
+```{r}
+fit = lm(value ~ Week + Treatment + Week:Treatment, data=school_time)
+summary(fit)
+```
+
+**Q: how do we interpret the interaction terms?**
