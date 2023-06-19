@@ -1,0 +1,258 @@
+---
+title: "Linear Models"
+author: "Filippo"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library("knitr")
+library("tidyverse")
+library("data.table")
+
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Linear models
+
+Faraway
+
+$$
+y = \mu + \beta x + e
+$$ \### Read data
+
+-   **CPUE**: target variable, "catch per unit effort"
+-   **SST**: sea surface temperature
+-   **CV**: actually, the coefficient of variation for SST is used $\rightarrow$ the coefficient of variation is an improved measure of seasonal SST over the mean, because it standardizes scale and allows us to consider the changes in variation of SST with the changes in mean over (Hannah Correia, 2018 - Ecology and Evolution)
+-   **SSTcvW1-5**: CPUE is influenced by survival in the first year of life. Water temperature affects survival, and juvenile fish are more susceptible to environmental changes than adults. Therefore, CPUE for a given year is likely linked to the winter SST at the juvenile state. Since this survey targets waters during the summer and the four species covered reach maturity at 5--8 years, SST was lagged for years one through five to allow us to capture the effect of SST on the juvenile stages. All five lagged SST measures were included for modeling.
+
+```{r read-the-data}
+basefolder = "/home/filippo/Dropbox/cursos/longitudinal_data_analysis"
+inpfile = "data/alaska_groundfish_catch/stema_data.csv"
+fname = file.path(basefolder, inpfile)
+
+fish = fread(fname)
+```
+
+```{r preprocess}
+fish <- fish |>
+  select(-c(V1,Latitude,Longitude))
+```
+
+We see that, in order to accommodate variation in SST among stations, the CPUE value has been replicated multiple times. This would defeat our purpose of analysing data by group (fish species) over space and time: with only one value per group, a statistical analysis is a bit hard to be performed (no variation). Therefore, to the original CPUE values we add some random noise proportional to the average (by species, area, year):
+
+```{r}
+fish |> filter(Species == "Pacific cod", Area == "West Yakutat", Year == "1990")
+```
+
+```{r}
+fish <- fish |>
+  group_by(Species, Area, Year) |>
+  mutate(avg = mean(CPUE), std = 0.1*avg)
+```
+
+```{r}
+fish <- fish |>
+  ungroup() |>
+  mutate(noise = rnorm(n = n(),mean = 0,sd = std), CPUE = CPUE + noise)
+```
+
+```{r}
+fish |> filter(Species == "Pacific cod", Area == "West Yakutat", Year == "1990")
+```
+
+### EDA
+
+Let's start by looking at the raw data. As we already saw, for each combination of species, area and year we have multiple observations; for instance, let's look at `Pacific cod` from `West Yakutat` in year `2000`. Therefore, a boxplot is a good way to plot these data:
+
+```{r}
+fish |> 
+  filter(Species == "Pacific cod", Area == "West Yakutat", Year == 2000)
+```
+
+```{r}
+p <- ggplot(fish, aes(Year, CPUE)) + geom_boxplot(aes(fill=Area))
+p <- p + facet_wrap(~Species)
+p
+```
+
+First, we note large variation in scale between fish species. Let's try to allow the scale to change by `Species`:
+
+```{r}
+p <- ggplot(fish, aes(Year, CPUE)) + geom_boxplot(aes(colour=Area))
+p <- p + facet_wrap(~Species, scales = "free_y")
+p
+```
+
+We now see CPUE oscillations overtime and between geogpraphical areas, but again this varies by fish species. What if we rescale CPUE?
+
+```{r}
+rescale01 <- function(x) {
+  rng <- range(x, na.rm = TRUE)
+  rescaled_variable = 100*(x - rng[1]) / (rng[2] - rng[1])
+  return(rescaled_variable)
+}
+
+fish <- fish |> group_by(Species) |>
+  mutate(
+  rescaled_cpue = rescale01(CPUE)
+)
+```
+
+```{r}
+fish |> group_by(Species) |>
+  summarise(imn = min(rescaled_cpue), max = max(rescaled_cpue))
+```
+
+```{r}
+p <- ggplot(fish, aes(Year, rescaled_cpue)) + geom_boxplot(aes(colour=Area))
+p <- p + facet_wrap(~Species)
+p
+```
+
+### Trends
+
+A trend is usually an average over time:
+
+```{r eda}
+dd <- fish |>
+  group_by(Species, Area, Year) |>
+  summarise(avg = round(mean(rescaled_cpue),2)) |>
+  spread(key = Year, value = avg)
+
+print(dd)
+```
+
+```{r}
+temp <- dd |> 
+  gather(key = "Year", value = "CPUE", -c(Species, Area))
+```
+
+Now the variable `Year` is a `factor`; we need to take this into account when making the plot:
+
+- `group`: we have only one observation for group (Species, Area, Year), so we must specify the grouping variable, in this case `Area`
+- year is not a number now, and this is reflected in the x axis: no intervals, all values are plotted (so we can for example place them vertically and make them smaller, to avoid overlap)
+
+```{r}
+p <- ggplot(temp, aes(Year, CPUE)) + geom_line(aes(color = Area, group = Area))
+p <- p + facet_wrap(~Species) + theme(axis.text.x = element_text(angle = 90, size = 6))
+p
+```
+
+Alternatively, we can convert Year to numeric, then plot as usual:
+
+```{r}
+temp <- dd |> 
+  gather(key = "Year", value = "CPUE", -c(Species, Area)) |>
+  mutate(Year = as.numeric(Year))
+```
+
+
+```{r}
+p <- ggplot(temp, aes(Year, CPUE)) + geom_line(aes(color = Area))
+p <- p + facet_wrap(~Species)
+p
+```
+**Q: Do we have a trend?**
+
+What about the standard deviation? Let's see if we have a trend there (!! remember, we introduced artificial random variation, no trend is actually expected, safe by chance !!):
+
+
+```{r}
+dd <- fish |>
+  group_by(Species, Area, Year) |>
+  summarise(std = round(sd(rescaled_cpue),2)) |>
+  spread(key = Year, value = std)
+
+print(dd)
+```
+
+
+```{r}
+temp <- dd |> 
+  gather(key = "Year", value = "sd(CPUE)", -c(Species, Area)) |>
+  mutate(Year = as.numeric(Year))
+```
+
+
+```{r}
+p <- ggplot(temp, aes(Year, `sd(CPUE)`)) + geom_line(aes(color = Area))
+p <- p + facet_wrap(~Species)
+p
+```
+**Q: What do you notice?**
+
+### Model-based adjustments
+
+```{r}
+mod <- lm(rescaled_cpue ~ SST_cvW+SST_cvW1+SST_cvW2+SST_cvW3+SST_cvW4+SST_cvW5, data = fish)
+summary(mod)
+```
+
+```{r}
+hist(residuals(mod))
+```
+
+```{r}
+fish$residuals <- residuals(mod)
+fish$fitted_values <- fitted(mod)
+```
+
+
+```{r}
+dd <- fish |>
+  group_by(Species, Area, Year) |>
+  summarise(avg = round(mean(residuals),2)) |>
+  spread(key = Year, value = avg)
+
+print(dd)
+```
+
+```{r}
+temp <- dd |> 
+  gather(key = "Year", value = "CPUE", -c(Species, Area)) |>
+  mutate(Year = as.numeric(Year))
+```
+
+
+```{r}
+p <- ggplot(temp, aes(Year, CPUE)) + geom_line(aes(color = Area))
+p <- p + facet_wrap(~Species)
+p
+```
+
+## Exercise
+
+1. Within populations, the expression of phenotypic traits typically varies with age. Such age-dependent trait variation can be caused by within-individual change (improvement, senescence, terminal effects) and/or selective (dis)appearance of certain phenotypes among older age classes. 
+
+2. within-individual change and selective (dis)appearance, in a long-lived seabird, the common tern (Sterna hirundo). 
+
+3. At the population level, all traits, except the probability to breed, improved with age (i.e., phenology advanced and reproductive output increased). Both methods identified within-individual change as the main responsible process, and within individuals, performance improved until age 6-13, before levelling off. In contrast, within individuals, breeding probability decreased to age 10, then levelled off. 
+
+OPTIONS:
+- look at males vs females across time
+- look at males vs females in two/three groups: young, intermediate, old birds
+
+Target variables can be: laying date or egg volume (approximately continuous variables)
+
+```{r read-the-cow-data}
+basefolder = "/home/filippo/Dropbox/cursos/longitudinal_data_analysis"
+inpfile = "data/seabird/data_traits.xlsx"
+fname = file.path(basefolder, inpfile)
+
+seabirds = readxl::read_xlsx(fname)
+```
+
+```{r}
+table(cows$nl)
+```
+
+Few cows with late parities, hence we group them:
+
+```{r}
+cows$parity <- cut(x = cows$nl, breaks = c(0,1,2,3,4,5,Inf), labels = c("1","2","3","4","5","6+"))
+```
+
+
+
+
