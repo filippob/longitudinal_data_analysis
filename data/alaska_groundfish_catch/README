@@ -1,0 +1,15 @@
+
+https://zenodo.org/record/4987796#.ZHcLL9JBxhE
+
+
+(1) Fisheries management is dominated by the need to forecast catch and abundance of commercially and ecologically important species. The influence of spatial information and environmental factors on forecasting error is not often considered. We propose a forecasting method called spatio-temporally explicit model averaging (STEMA) to combine spatial and temporal information through model averaging. (2) We examine the performance of STEMA against two popular forecasting models and a modern spatial prediction model: the autoregressive integrated moving averages (ARIMA) model, the Bayesian hierarchical model, and the varying coefficient model. We focus on applying the methods to four species of Alaskan groundfish for which only catch data are available. (3) Our method reduces forecasting errors significantly for most of the tested models when compared to ARIMAX, Bayesian, and varying coefficient methods. We also consider the effect of sea surface temperature (SST) on the forecasting of catch, as multiple studies reveal a potential influence of water temperature on the survival and growth of juvenile groundfish. For most of the preferred models, inclusion of SST in the model improved forecasting of catch. (4) It is advisable to consider both spatial information and relevant environmental factors in forecasting models to obtain more accurate projections of population abundance. The STEMA method is capable of accounting for spatial information in forecasting and can be applied to various types of data because of its flexible varying coefficient model structure. It is therefore a suitable forecasting method for application to many fields including ecology, epidemiology, and climatology.
+
+
+Target variable: CPUE
+---------------------
+The AFSC records number of fish per species collected at each location and calculates a catch per unit effort (CPUE) within each management area from the total number of fish caught divided by the total number of skates, 100-meter longlines with 45 evenly spaced hooks per line, deployed each day (Sigler & Lunsford, 2009). 
+The CPUE is therefore a standardized measure of catch at each location.
+
+SST: sea surface temperature
+
+CPUE ~ year + area + (species) + (SST)
