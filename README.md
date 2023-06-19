@@ -21,7 +21,7 @@ As a general rule, we'll have a longer break (30 minutes) at 16:00 and two short
     - [1.longitudinal_data.Rmd](day_1/1.longitudinal_data.Rmd)
 - Lecture 2: [The basic experimental setting: treatments and timepoints](slides/) [Filippo]
 - Lab 2: Treatments and timepoints in R [Filippo]
-    - [2.treatments_and_timepoints](day_1/2.treatments_and_timepoints.Rmd)
+    - [2.treatments_and_timepoints.Rmd](day_1/2.treatments_and_timepoints.Rmd)
 - Lecture 3: [The classical statistical perspective](slides/) [Filippo]
 - Lab 3: Models to analyse data with repeated records over time (multiple time points) and space (multiple locations) in R
 
