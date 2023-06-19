@@ -1,0 +1,114 @@
+---
+title: "Treatments and timepoints"
+author: "Filippo Biscarini"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library("DT")
+library("knitr")
+library("ggpubr")
+library("tidyverse")
+library("data.table")
+
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Treatments and timepoints
+
+$$
+y = \mu + \beta_1 \text{timepoint} + \beta_2 \text{treatment} + e
+$$
+
+## Read the data
+
+Data from [The effects of lateral line ablation and regeneration in schooling giant danios](https://journals.biologists.com/jeb/article/221/8/jeb175166/300/The-effects-of-lateral-line-ablation-and) (data repo [here](https://zenodo.org/record/4999506))
+
+It's data on fish (*Devario aequipinnatus*) lateral line system, with the effect of chemical treatments (gentamycin or no treatment -- sham) at different timepoints.
+
+```{r read-the-bird-data}
+basefolder = "/home/filippo/Dropbox/cursos/longitudinal_data_analysis/longitudinal_data_analysis"
+inpfile = "data/lateral_line/JEXBIO-2017-175166-Processed-Data-Master.txt"
+fname = file.path(basefolder, inpfile)
+
+danios = fread(fname)
+```
+
+Dataset on *giant danios*: how the lateral line system responds to chemical treatments.
+
+The target variables can be:
+
+1.  nearest neighbor distance or NND (unit: body length),
+2.  time in school (percentage),
+3.  angular bearing (unit: degrees),
+4.  angular elevation (unit: degrees),
+5.  speed (body length per second).
+
+Explanatory variables include:
+
+-   `Treatment`: gentamycin / sham (control)
+-   `Week`: time point in subsequent weeks (from week -1 to week 8)
+
+### EDA
+
+```{r}
+danios |>
+  group_by(Week, Treatment) |>
+  summarise(N = n()) |>
+  spread(key = Treatment, value = N) |>
+  kable(format = "html", table.attr = "style = \"color: white;\"")
+```
+
+```{r, fig.width=12, fig.height=9}
+mD <- danios |> gather(key = "target", value = "value", -c(Treatment, Week))
+mD$Week <- factor(mD$Week)
+
+df_mean <- mD |> group_by(Week, Treatment, target) |>
+  summarise(avg = mean(value))
+
+p <- ggplot(mD, aes(x = Week, y = value)) + geom_boxplot(aes(color = Treatment), alpha = 0.3)
+p <- p + geom_point(data = df_mean, mapping = aes(x = Week, y = avg, group=Treatment), color="black")
+p <- p + geom_line(data = df_mean, mapping = aes(x = Week, y = avg, group=Treatment, color=Treatment), size = 1.5)
+p <- p + facet_wrap(~target, scales = "free_y")
+p <- ggpar(p, palette = c("#00AFBB", "#E7B800", "#FC4E07"))
+p
+```
+From reading the article, we expect the treatment to have an effect a little time after the application of gentamycin (vs control/sham) 
+and then to see restoration when the cells of the lateral line system are regenerated.
+
+**Q: which target variables better show this expected pattern?**
+
+### Pick target variable
+
+We select `Time in School` (based on the EDA above).
+
+```{r}
+dd <- danios |>
+  group_by(Week, Treatment) |>
+  summarise(avg = mean(`Time in School`), std = sd(`Time in School`))
+```
+
+```{r}
+temp <- dd |>
+  select(-std) |>
+  spread(key = Treatment, value = avg) |>
+  mutate(diff = abs(Gentamycin-Sham)) |>
+  select(-c(Gentamycin,Sham))
+
+dd <- dd |> inner_join(temp, by = "Week")
+```
+
+```{r}
+datatable(dd, options=list(columnDefs = list(list(visible=FALSE, targets=c(5))),
+                           pageLength = 12)) |> 
+  # formatStyle('Week', fontWeight = styleInterval(c(2,4), c('normal', 'bold','normal'))) |>
+  formatStyle(
+    'diff',
+    target = 'row',
+    fontWeight = styleInterval(c(20), c('normal', 'bold')),
+    # color = styleInterval(c(20, 40), c('white', 'blue', 'red')),
+    backgroundColor = styleInterval(20, c('white', 'yellow'))
+)
+```
+

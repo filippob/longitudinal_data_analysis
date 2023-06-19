@@ -1,6 +1,6 @@
 ---
 title: "Linear Models"
-author: "Filippo"
+author: "Filippo Biscarini"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
 output: html_document
 ---
