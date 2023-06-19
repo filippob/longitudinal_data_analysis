@@ -1,0 +1,222 @@
+---
+title: "mixed_models"
+author: "Filippo"
+date: "2023-06-08"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library("DT")
+library("broom")
+library("knitr")
+library("ggpubr")
+library("sommer")
+library("contrast")
+library("lubridate")
+library("tidyverse")
+library("data.table")
+
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+This is a frequent case of longitudinal data: repeated observations taken on individuals.
+The objective is to study the change of the target variable over time (multiple measurements) and the factors (explanatory variables) that influence this change.
+Observations that belong to the same individual (patient, animal, plant, group) tend to be more similar than observations from different individuals, 
+and this covariance need to be accounted for in the model of analysis.
+
+Repeated-record data are a special case of hierarchical data, where observations are nested within levels (e.g. milk yield measurements within cow, or cows within herd, fish catches within region etc.).
+
+- $y_{ij}$: target variable measured on individual *i* at time *j*
+- $\Sigma$: symmetric covariance matrix between individuals
+
+## Cow data
+
+Dataset on dairy cows: 
+  
+- NID: cow ID
+- dtn: birthdate
+- dtp: calving date
+- dtcf: milk testing day
+- aua: herd
+- nl: parity
+- milk: kg/day
+- fat %
+- protein %
+- SCC: somatic cells count
+- fat kg
+- protein kg
+
+
+```{r read-the-cow-data}
+basefolder = "/home/filippo/Dropbox/cursos/longitudinal_data_analysis/longitudinal_data_analysis"
+inpfile = "data/cows/esempio.csv"
+fname = file.path(basefolder, inpfile)
+
+cows = fread(fname)
+```
+
+Repeated records per individual (cow)
+
+```{r}
+table(cows$NID)
+```
+
+### Preprocessing
+
+We encode dates as date data (not strings); in *R* we can use functions from the `lubridate` package to handle dates:
+
+```{r}
+cows$date = parse_date_time(cows$dtcf, orders = '%d/%m/%Y')
+```
+
+Few cows with late parities, hence we group them:
+
+```{r}
+table(cows$nl)
+```
+
+```{r}
+cows$parity <- cut(x = cows$nl, breaks = c(0,1,2,3,4,5,Inf), labels = c("1","2","3","4","5","6+"))
+```
+
+Then we select the variables of interest.
+
+- target is milk kg / day
+- time is the test-day date
+- systematic effects are herd and parity (regrouped as above)
+
+```{r}
+cows_reduced <- cows |>
+  dplyr::select(c(NID, date, aua, parity, latte)) |>
+  rename(milk = latte, herd = aua) |>
+  mutate(herd = as.factor(herd))
+```
+
+### EDA
+
+```{r}
+ggplot(cows_reduced, aes(parity, milk, fill = parity)) +
+  geom_boxplot() +
+  geom_jitter(width = 0.2) +
+  guides(fill = "none") +
+  labs(x = "", y = "Milk yield, kg/day")
+```
+
+##### Individual cow plots
+
+```{r}
+ggplot(cows_reduced, aes(date, milk, color = factor(NID))) +
+  geom_point() +
+  geom_line() +
+  facet_wrap(~ NID) +
+  labs(x = "Test day", y = "Milk kg/d", color = "Cow id") +
+  theme(legend.position = "none")
+```
+
+By herd:
+
+```{r, warning=FALSE, message=FALSE, fig.width=10, fig.height=8}
+ggplot(cows_reduced, aes(date, milk, color = factor(NID))) +
+  geom_line(aes(group = factor(NID))) +
+  geom_smooth() +
+  labs(x = "Test day", y = "Milk, kg/d", color = "Cow id") +
+  facet_wrap(~ herd, scales = "free", ncol = 6) +
+  theme(legend.position = "none", axis.text.x = element_text(angle=90, size = 6))
+```
+
+```{r}
+cows_reduced |>
+  group_by(herd) |>
+  summarise(n_cows = n()) |>
+  group_by(n_cows) |>
+  summarise(n_herds = n())
+```
+
+### Repeatability model
+
+```{r}
+results <- mmer(fixed = milk ~ parity + herd,
+              random= ~ NID,
+              rcov= ~ units,
+              data=cows_reduced, 
+              verbose = TRUE)
+```
+
+```{r}
+summary(results)$varcomp
+```
+
+
+```{r}
+vpredict(results, repeatability ~ (V1)/(V1+V2))
+```
+
+##### Model coefficients
+
+Systematic part of the mixed model:
+
+```{r}
+results$Beta
+```
+
+##### Random effects
+
+As many random effects as there are individuals (cows):
+
+```{r}
+u = results$U$NID$milk
+length(u)
+```
+
+Random effects are centered and approximately normally distributed:
+
+```{r}
+summary(u)
+```
+
+##### Fitted values
+
+From the model, we can obtain fitted values as:
+
+$$
+\hat{y} = \mu + \text{parity} + \text{herd} + \text{u} = \mathbf{Xb} + \mathbf{Zu} 
+$$
+
+```{r}
+y_hat = results$fitted
+```
+
+There are as many fitted values as records (repeated) in the dataset:
+
+```{r}
+length(y_hat)
+```
+
+```{r}
+hist(y_hat, breaks = 25) ## 500/20 = 25
+```
+
+Correlation between fitted and observed values.
+
+```{r}
+cor(cows_reduced$milk, y_hat)
+```
+
+### Residuals and model diagnostics
+
+```{r}
+summary(results$residuals)
+```
+
+```{r}
+hist(results$residuals, breaks = 25)
+```
+
+
+## Exercise: can you improve the model?
+
+- define a performance metric
+- modify the model
+- run it and check the performance
+
+
