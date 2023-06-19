@@ -74,6 +74,7 @@ p <- p + facet_wrap(~target, scales = "free_y")
 p <- ggpar(p, palette = c("#00AFBB", "#E7B800", "#FC4E07"))
 p
 ```
+
 From reading the article, we expect the treatment to have an effect a little time after the application of gentamycin (vs control/sham) 
 and then to see restoration when the cells of the lateral line system are regenerated.
 
@@ -111,4 +112,102 @@ datatable(dd, options=list(columnDefs = list(list(visible=FALSE, targets=c(5))),
     backgroundColor = styleInterval(20, c('white', 'yellow'))
 )
 ```
+
+## Models of analysis
+
+1. treatment within timepoint
+2. treatment + timepoint
+3. treatment + timepoint + (treatment x timepoint)
+
+### Within timepoint
+
+This is the simplest approach: we split the data by timepoint and make a comparison between treatments.
+
+```{r}
+school_time = filter(mD, target == "Time in School") ## !! REMEMBER THAT WE SELECTED ONE TARGET VARIABLE, Time in School !!
+school_time$Treatment <- factor(school_time$Treatment, levels = c("Sham", "Gentamycin"))
+temp <- filter(school_time, Week == 2)
+```
+
+Now we have a much simpler dataset, with `Gentamycin`-treated and control fish records from week 2 only.
+
+$$
+\text{Time in School} = \mu + \beta \text{Treatment} + e
+$$
+
+```{r}
+fit = lm(value ~ Treatment, data = temp)
+summary(fit)
+```
+
+#### From matrix algebra
+
+$$
+\mathbf{y} = \mathbf{Xb} + \mathbf{e}
+$$
+
+```{r}
+X <- model.matrix(value ~ Treatment, temp)
+y = temp$value
+```
+
+$$
+\mathbf{X'y} = \mathbf{X'Xb}
+$$
+
+- **X**: (n,m) = (50, 2) [50 records, 2 parameters: intercept and slope]
+- **y**: (n,1)
+- **X'y**: (m,1) = (2,1)
+- **X'X**: (m,m) = (2,2)
+- **b**: (m,1) = (2,1)
+
+```{r}
+Xy = t(X) %*% y
+XX = t(X) %*% X
+```
+
+$$
+\mathbf{b} = \mathbf{X'X}^{-1} \cdot \mathbf{X'y}
+$$
+
+```{r}
+b = solve(XX) %*% Xy
+print(b)
+```
+
+We see that this involves matrix inversion.
+Since this is a 2x2 matrix, we could do it by hand (for fun! But don't worry: R will take care of matrix inversion for this and -much- larger matrices).
+
+$$
+\begin{bmatrix}
+a & b \\
+c & d
+\end{bmatrix} ^ {-1} = \frac{1}{ad-bc} \cdot
+\begin{bmatrix}
+d & -b \\
+-c & a
+\end{bmatrix}
+$$
+
+```{r}
+print(XX)
+```
+
+```{r}
+multiplicative_factor = 1/(50*25 - 25*25)
+M = matrix(c(25, -25, -25, 50), nrow=2, byrow = TRUE)
+print(M)
+```
+
+```{r}
+invMatrix = multiplicative_factor * M
+print(invMatrix)
+```
+
+```{r}
+print(solve(XX))
+```
+
+#### And the p-value?
+
 
