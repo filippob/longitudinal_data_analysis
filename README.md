@@ -14,16 +14,14 @@ As a general rule, we'll have a longer break (30 minutes) at 16:00 and two short
 
 **Day 1**
 
-- Lecture 0	General Introduction / Overview of the Course [Filippo]
+- Lecture 0: General Introduction / Overview of the Course [Filippo]
     - [General Introduction](slides/)
-    - [Course Workflow (short)](slides/)
-- Lecture 1	Longitudinal data: examples and challenges [Filippo]
-    - [GWAS Overview](slides/)
-- Lab 1 (Demonstration) First encounter with longitudinal data [Filippo]
-    - [R code. Exercise on Simple Linear Regression](basic_model/1.Basis_of_linear_regression.R)
-    - [Rmarkdown Code. Exercise on Simple Logistic Regression](basic_model/2.exercise.Basis_of_logistic_regression.Rmd)
-- Lab 2 - Tidyverse Introduction [Christian]
-    - [Tidyverse intro (pdf)](slides/Tidyverse_Intro.pdf)
-- Lab 3 - Description of Datasets [Christian]
-    - [Description of Datasets](slides/Description_of_data.pdf)
+- Lecture 1: [Longitudinal data: examples and challenges](slides/) [Filippo]
+- Lab 1: First encounter with longitudinal data [Filippo]
+    - [Longitudinal data](day_1/1.longitudinal_data.Rmd)
+- Lecture 2: [The basic experimental setting: treatments and timepoints](slides/) [Filippo]
+- Lab 2: Treatments and timepoints in R [Filippo]
+    - [R](day_1/)
+- Lecture 3: [The classical statistical perspective](slides/) [Filippo]
+- Lab 3: Models to analyse data with repeated records over time (multiple time points) and space (multiple locations) in R
 
