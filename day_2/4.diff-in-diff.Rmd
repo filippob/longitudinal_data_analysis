@@ -7,6 +7,7 @@ output: html_document
 
 ```{r setup, include=FALSE}
 library("plm")
+library("broom")
 library("tidyverse")
 library("data.table")
 
@@ -51,6 +52,8 @@ Hence, some plausibility checks should be conducted:
 First, we walk through the calculations withoout using an explicit model.
 
 ### Injury dataset
+
+This dataset comes from the R package **wooldridge** ([here](https://cran.r-project.org/web/packages/wooldridge/index.html)).
 
 - **1980**: new policy (Kentucky) on raised weekly earnings that were covered by worker's compensation (more after-injury benefits for high-earners). 
 - **Research question**: has this new policy caused higher earning workers to spend more time injured? (generous benefits may cause higher earning workers to be more reckless on the job, or to claim that off-the-job injuries were incurred while at work, or to prefer injury benefits rather than keep on working - for mild injuries at least)
@@ -185,7 +188,7 @@ print(dd)
 The **diff-in-diff estimate** is 0.19, which means that the program causes an increase in unemployment duration of 0.19 logged weeks.
 For *log-linear models* ($log(y) = \mu + \beta x + e$), this translates to $e^{0.19}=1.2$ weeks.
 
-This is shown graphically in the plot below:
+This is shown graphically in the plot below: the dashed gray line is the **counterfactual**.
 
 ```{r}
 ggplot(diffs, aes(x = after_1980, 
@@ -207,4 +210,32 @@ ggplot(diffs, aes(x = after_1980,
   annotate(geom = "label", x = "after", y = pull(dd[2,3]) - (pull(dd[3,4]) / 2), 
            label = "Program effect", size = 3)
 ```
+
+## Diff-in-diff: a regression model
+
+Rather than calculating diff-in-diff by hand, we can use a regression model which, besides simplifying the calculations,
+will also allow for a more flxible, powerful and robust analysis (e.g. account for covariables).
+
+$$
+\text{log}(duration) = \mu + \beta_1 \text{income} + \beta_2 \text{time} + \beta_3 (\text{income x time}) + e 
+$$
+
+```{r}
+diff_model <- lm(log_duration ~ earnings + after_1980 + earnings:after_1980, data = injury)
+tidy(diff_model)
+```
+
+We see that we got the same value for the coefficient of the interaction term, as we did by hand (ressuring ;-)).
+
+## Exercise
+
+**Q: what if we add covariables to the model?**
+
+You can try with obvious ones: 
+
+- sex (`male`)
+- `age`
+- `married`
+
+
 
