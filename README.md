@@ -26,4 +26,5 @@ As a general rule, we'll have a longer break (30 minutes) at 16:00 and two short
     - [2.3.linear_regression_with_tidymodels.Rmd]()
 - Lecture 3: [The classical statistical perspective](slides/) [Filippo]
 - Lab 3: Models to analyse data with repeated records over time (multiple time points) and space (multiple locations) in R
+    - [3.repeated_records.Rmd](day_1/3.repeated_records.Rmd)
 
