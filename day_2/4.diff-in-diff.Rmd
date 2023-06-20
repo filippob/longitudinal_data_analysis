@@ -52,8 +52,8 @@ First, we walk through the calculations withoout using an explicit model.
 
 ### Injury dataset
 
-- **1980**: new policy (Kentucky) on raised weekly earnings that were covered by worker's compensation (more unemployment benefits). 
-- **Research question**: has this new policy caused workers to spend more time unemployed? (if benefits are not generous enough, then workers could sue companies for on-the-job injuries, while overly generous benefits could cause moral hazard issues and induce workers to be more reckless on the job, or to claim that off-the-job injuries were incurred while at work)
+- **1980**: new policy (Kentucky) on raised weekly earnings that were covered by worker's compensation (more after-injury benefits for high-earners). 
+- **Research question**: has this new policy caused higher earning workers to spend more time injured? (generous benefits may cause higher earning workers to be more reckless on the job, or to claim that off-the-job injuries were incurred while at work, or to prefer injury benefits rather than keep on working - for mild injuries at least)
 
 ```{r injury}
 basefolder = "/home/filippo/Dropbox/cursos/longitudinal_data_analysis/data"
@@ -67,29 +67,29 @@ Rename columns:
 
 ```{r}
 injury <- injury %>% 
-  # The syntax for rename is `new_name = original_name`
+  filter(ky == 1) |>
   rename(duration = durat, log_duration = ldurat,
          after_1980 = afchnge,
-         policy = ky) ## kentucky is where the policy was implemented, other states are controls
+         earnings = highearn) ## kentucky is where the policy was implemented, other states are controls
 ```
 
 
-- `duration`: duration of unemployment benefits, measured in weeks
+- `duration`: duration of injury benefits, measured in weeks
 - `log_duration`: `log(duration)` [natural logarithm]
 - `after_1980`: observation happened before (0) or after (1) the policy change in 1980. This is our time (or before/after variable)
-- `policy`: states that implemented (Kentucky, `1`) or not (other states, `0`) the policy on unemployment benefits
-<!-- - highearn: observation is a low (0) or high (1) earner. This is our group (or treatment/control) variable -->
+<!-- - `policy`: states that implemented (Kentucky, `1`) or not (other states, `0`) the policy on unemployment benefits -->
+- `highearn`: observation is a low (0) or high (1) earner. This is our group (or treatment/control) variable: there was no change for low earners (same benefits), while higher earners now have benefits that they did not have earlier 
 
 ```{r}
 injury <- injury |>
-  mutate(policy = ifelse(policy == 0, "control","extra_benefits"),
+  mutate(earnings = ifelse(earnings == 0, "low-income","high-income"),
          after_1980 = ifelse(after_1980 == 0, "before", "after"))
 ```
 
 
 ```{r}
 injury <- injury |>
-  mutate(policy = factor(policy, levels = c("control","extra_benefits")),
+  mutate(earnings = factor(earnings, levels = c("low-income","high-income")),
          after_1980 = factor(after_1980, levels = c("before", "after")))
 ```
 
@@ -100,7 +100,111 @@ ggplot(data = injury, aes(x = duration)) +
   # binwidth = 8 makes each column represent 2 months (8 weeks) 
   # boundary = 0 make it so the 0-8 bar starts at 0 and isn't -4 to 4
   geom_histogram(binwidth = 8, color = "white", boundary = 0) +
-  facet_wrap(vars(highearn)) ## groups
+  facet_wrap(vars(earnings)) ## groups
 ```
 
+The distribution is really skewed, with most persons in both groups getting the lowest range of benefits weeks.
+Using the logarithm of duration would change this, making the distribution of the $y$ more "gaussian", hence more amenable
+to be analysed with linear regression models.
+
+```{r}
+ggplot(data = injury, mapping = aes(x = log_duration)) +
+  geom_histogram(binwidth = 0.5, color = "white", boundary = 0) + 
+  # Uncomment this line if you want to exponentiate the logged values on the
+  # x-axis. Instead of showing 1, 2, 3, etc., it'll show e^1, e^2, e^3, etc. and
+  # make the labels more human readable
+  # scale_x_continuous(labels = trans_format("exp", format = round)) +
+  facet_wrap(vars(earnings))
+```
+
+
+Let's plot average log-durations in the two groups, before and after the implementation of the policy:
+we see that higher-income workers had already a higher n. of injury-benefits weeks before the new policy 
+(maybe workers that do riskier jobs are paid better).
+With the new policy, this seems emphasized.
+
+```{r}
+ggplot(injury, aes(x = earnings, y = log_duration)) +
+  geom_point(size = 0.5, alpha = 0.2) +
+  stat_summary(geom = "point", fun = "mean", size = 5, color = "red") +
+  facet_wrap(vars(after_1980)) + xlab("policy")
+```
+
+```{r}
+plot_data <- injury %>% 
+  group_by(earnings, after_1980) %>% 
+  summarize(mean_duration = mean(log_duration),
+            se_duration = sd(log_duration) / sqrt(n()),
+            upper = mean_duration + (1.96 * se_duration),
+            lower = mean_duration + (-1.96 * se_duration)) 
+```
+
+```{r}
+ggplot(plot_data, aes(x = earnings, y = mean_duration)) +
+  geom_pointrange(aes(ymin = lower, ymax = upper), 
+                  color = "darkgreen", size = 1) +
+  facet_wrap(vars(after_1980)) + xlab("policy") + ylab("mean duration (log scale)")
+```
+
+We can now see the change, in terms of number of weeks of injury benefits (log scale) before and after the new policy,
+in the two groups:
+
+```{r}
+ggplot(plot_data, aes(x = after_1980, y = mean_duration, color = earnings)) +
+  geom_pointrange(aes(ymin = lower, ymax = upper), size = 1) + 
+  # The group = highearn here makes it so the lines go across categories
+  geom_line(aes(group = earnings)) + ylab("mean duration (log scale)")
+```
+
+## Diff-in-diff by hand
+
+After having explored the data, we can now actually calculate the estimate of the **difference in differences** for the two groups:
+difference between after-before differences in high vs low income workers.
+
+```{r}
+diffs <- injury %>% 
+  group_by(after_1980, earnings) %>% 
+  summarize(mean_duration_log = mean(log_duration),
+            # Calculate average with regular duration too, just for fun
+            mean_duration_weeks = mean(duration))
+diffs
+```
+
+```{r}
+dd <- diffs |>
+  select(-mean_duration_weeks) |>
+  spread(key = after_1980, value = mean_duration_log) |>
+  mutate(diff = after-before) |>
+  mutate(across(where(is.numeric), round, 3))
+
+last_row = cbind.data.frame(data.frame("earnings"="diff"),diff(as.matrix(dd[,-1])))
+dd <- bind_rows(dd,last_row)
+print(dd)
+```
+
+The **diff-in-diff estimate** is 0.19, which means that the program causes an increase in unemployment duration of 0.19 logged weeks.
+For *log-linear models* ($log(y) = \mu + \beta x + e$), this translates to $e^{0.19}=1.2$ weeks.
+
+This is shown graphically in the plot below:
+
+```{r}
+ggplot(diffs, aes(x = after_1980, 
+                  y = mean_duration_log, 
+                  color = earnings)) + 
+  geom_point() +
+  geom_line(aes(group = earnings)) +
+  # If you use these lines you'll get some extra annotation lines and
+  # labels. The annotate() function lets you put stuff on a ggplot that's not
+  # part of a dataset. Normally with geom_line, geom_point, etc., you have to
+  # plot data that is in columns. With annotate() you can specify your own x and
+  # y values.
+  annotate(geom = "segment", x = "before", xend = "after",
+           y = pull(dd[2,2]), yend = pull(dd[2,3]) - pull(dd[3,4]),
+           linetype = "dashed", color = "grey50") +
+  annotate(geom = "segment", x = "after", xend = "after",
+           y = pull(dd[2,3]), yend = pull(dd[2,3]) - pull(dd[3,4]),
+           linetype = "dotted", color = "blue") +
+  annotate(geom = "label", x = "after", y = pull(dd[2,3]) - (pull(dd[3,4]) / 2), 
+           label = "Program effect", size = 3)
+```
 
