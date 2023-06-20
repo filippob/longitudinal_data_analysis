@@ -202,6 +202,80 @@ Correlation between fitted and observed values.
 cor(cows_reduced$milk, y_hat)
 ```
 
+The correlation between observed and predicted (fitted) values of the target variable 
+is one way to measure the **predictive ability** of the model.
+
+**Q: have we measured correctly the predictive ability of the model?**
+
+### (Cross) Validation
+
+```{r}
+y.trn = cows_reduced
+n = nrow(cows_reduced)
+vv <- sample(rownames(cows_reduced),round(n/10))
+vec = rownames(cows_reduced) %in% vv
+y.trn[vec,"milk"] <- NA
+```
+
+
+```{r}
+results <- mmer(fixed = milk ~ parity + herd,
+              random= ~ NID,
+              rcov= ~ units,
+              data=y.trn, 
+              verbose = TRUE)
+```
+
+```{r}
+test = cows_reduced[vec,]
+u = results$U$NID$milk
+u = data.frame("id"=names(u), "u"=u)
+b = results$Beta
+u$id = gsub("NID","",u$id)
+b$Effect = gsub("parity|herd","",b$Effect)
+b <- bind_rows(b, data.frame("Trait"="milk","Effect"="1","Estimate"=0)) ## add reference parity class
+b <- bind_rows(b, data.frame("Trait"="milk","Effect"="2720373","Estimate"=0)) ## add reference class for the herd effect
+```
+
+
+```{r}
+test$parity_effect = b$Estimate[match(test$parity, b$Effect)]
+test$herd_effect = b$Estimate[match(test$herd, b$Effect)]
+test$u_effect = u$u[match(test$NID, u$id)]
+test$intercept = filter(b, Effect == "(Intercept)") |> pull("Estimate")
+test$intercept = as.numeric(test$intercept)
+```
+
+
+```{r}
+test <- test |> mutate(prediction = intercept + parity_effect + herd_effect + u_effect)
+ggplot(test, aes(prediction,milk)) + geom_point() + geom_smooth()
+```
+
+```{r}
+cor(test$milk, test$prediction)
+```
+
+```{r}
+sqrt(sum((test$milk-test$prediction)^2)/nrow(test)) ## RMSE
+```
+
+
+```{r}
+train = na.omit(y.trn)
+train$pred = results$fitted
+ggplot(train, aes(pred,milk)) + geom_point() + geom_smooth()
+```
+
+```{r}
+cor(train$pred, train$milk)
+```
+
+```{r}
+sqrt(sum((train$milk-train$pred)^2)/nrow(train)) ## RMSE
+```
+
+
 ### Residuals and model diagnostics
 
 ```{r}
