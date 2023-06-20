@@ -1,0 +1,106 @@
+---
+title: "Difference-in-differences"
+author: "Filippo Biscarini"
+date: "2023-06-20"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library("plm")
+library("tidyverse")
+library("data.table")
+
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+ ## A little background
+
+Differences in the outcome variable (Y), i.e. a before-after comparison (e.g. treatment vs control):
+
+- observations from regions that underwent intervention vs. observations from regions where the intervention did not take place
+  - treatment = intervention
+  - time = before/after
+- observations from a region before and after the intervention
+  - treatment = intervention
+  - synthetic control needed
+
+**The main assumption is that without the change in the environment (intervention/policy etc.) the outcome variable would have remained constant!**
+
+The **diff-in-diff** approach includes a before-after comparison for a **treatment** and **control** group. 
+This is a combination of:
+
+- a *cross-sectional comparison* (treated vs non-treated control group)
+- a **before-after** (*longitudinal*) **comparison** (treatment group with itself, before and after the treatment)
+
+The before-after difference in the treatment group gets a correction, by accounting for the before-after difference in the control group, eliminating the trend problem. 
+
+To obtain an unbiased estimate of the treatment effect one needs to make a parallel trend assumption. 
+That means without the change in the environment, 
+the change in the outcome variable would have been the same for the two groups (**counterfactual** outcome).
+
+The validity of the diff-in-diff approach is closely related to the similarity of the treatment and control groups. 
+Hence, some plausibility checks should be conducted:
+
+- compute placebo-diff-in-diff for periods without a change in the environment
+- for (longer) time series: check and demonstrate the parallel time trends
+- use an alternative control group (if available, or synthetic): the estimate should be the same
+- replace **y** by an alternative outcome which is known to be independent of the treatment (the diff-in-diff estimator should be 0)
+
+## Diff-in-diff by hand
+
+First, we walk through the calculations withoout using an explicit model.
+
+### Injury dataset
+
+- **1980**: new policy (Kentucky) on raised weekly earnings that were covered by worker's compensation (more unemployment benefits). 
+- **Research question**: has this new policy caused workers to spend more time unemployed? (if benefits are not generous enough, then workers could sue companies for on-the-job injuries, while overly generous benefits could cause moral hazard issues and induce workers to be more reckless on the job, or to claim that off-the-job injuries were incurred while at work)
+
+```{r injury}
+basefolder = "/home/filippo/Dropbox/cursos/longitudinal_data_analysis/data"
+fname = file.path(basefolder, "injury/injury.csv")
+injury <- read_csv(fname)
+```
+
+### Preprocessing
+
+Rename columns:
+
+```{r}
+injury <- injury %>% 
+  # The syntax for rename is `new_name = original_name`
+  rename(duration = durat, log_duration = ldurat,
+         after_1980 = afchnge,
+         policy = ky) ## kentucky is where the policy was implemented, other states are controls
+```
+
+
+- `duration`: duration of unemployment benefits, measured in weeks
+- `log_duration`: `log(duration)` [natural logarithm]
+- `after_1980`: observation happened before (0) or after (1) the policy change in 1980. This is our time (or before/after variable)
+- `policy`: states that implemented (Kentucky, `1`) or not (other states, `0`) the policy on unemployment benefits
+<!-- - highearn: observation is a low (0) or high (1) earner. This is our group (or treatment/control) variable -->
+
+```{r}
+injury <- injury |>
+  mutate(policy = ifelse(policy == 0, "control","extra_benefits"),
+         after_1980 = ifelse(after_1980 == 0, "before", "after"))
+```
+
+
+```{r}
+injury <- injury |>
+  mutate(policy = factor(policy, levels = c("control","extra_benefits")),
+         after_1980 = factor(after_1980, levels = c("before", "after")))
+```
+
+### EDA
+
+```{r}
+ggplot(data = injury, aes(x = duration)) +
+  # binwidth = 8 makes each column represent 2 months (8 weeks) 
+  # boundary = 0 make it so the 0-8 bar starts at 0 and isn't -4 to 4
+  geom_histogram(binwidth = 8, color = "white", boundary = 0) +
+  facet_wrap(vars(highearn)) ## groups
+```
+
+
