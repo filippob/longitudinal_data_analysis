@@ -27,4 +27,9 @@ As a general rule, we'll have a longer break (30 minutes) at 16:00 and two short
 - Lecture 3: [The classical statistical perspective](slides/) [Filippo]
 - Lab 3: Models to analyse data with repeated records over time (multiple time points) and space (multiple locations) in R
     - [3.repeated_records.Rmd](day_1/3.repeated_records.Rmd)
+- Lecture 4: Difference-in-differences (diff-in-diff) [Filippo]
+ 
+**Day 2**
 
+- Lab 4: diff-in-diff in R
+    - []
