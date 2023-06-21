@@ -1,0 +1,196 @@
+---
+title: "Block cross validation"
+author: "Filippo Biscarini"
+date: "2023-06-21"
+output: html_document
+---
+
+
+```{r setup, include=FALSE}
+library("knitr")
+library("xgboost")
+library("tidyverse")
+library("data.table")
+library("tidymodels")
+
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+After covering random cross-validation, we now introduce a more advanced topic:
+cross-validation for data with temporal, spatial, hierarchical or phylogenetic structure (stratified data).
+
+We are using the same dataset on fish catch.
+
+## Read data
+
+Data from [Spatiotemporally explicit model averaging for forecasting of Alaskan groundfish catch](https://onlinelibrary.wiley.com/doi/10.1002/ece3.4488)
+(data repo [here](https://zenodo.org/record/4987796#.ZHcLL9JBxhE))
+
+It's data on fish catch (multiple fish species) over time in different regions of Alaska.
+
+```{r read-the-data}
+basefolder = "/home/filippo/Dropbox/cursos/longitudinal_data_analysis/longitudinal_data_analysis"
+inpfile = "data/alaska_groundfish_catch/stema_data.csv"
+fname = file.path(basefolder, inpfile)
+
+fish = fread(fname)
+```
+
+-   **CPUE**: target variable, "catch per unit effort"
+-   **SST**: sea surface temperature
+-   **CV**: actually, the coefficient of variation for SST is used $\rightarrow$ the coefficient of variation is an improved measure of seasonal SST over the mean, because it standardizes scale and allows us to consider the changes in variation of SST with the changes in mean over (Hannah Correia, 2018 - Ecology and Evolution)
+-   **SSTcvW1-5**: CPUE is influenced by survival in the first year of life. Water temperature affects survival, and juvenile fish are more susceptible to environmental changes than adults. Therefore, CPUE for a given year is likely linked to the winter SST at the juvenile state. Since this survey targets waters during the summer and the four species covered reach maturity at 5--8 years, SST was lagged for years one through five to allow us to capture the effect of SST on the juvenile stages. All five lagged SST measures were included for modeling.
+
+### Data preprocessing
+
+- `V1` is record ID
+- `Station` indicates the fishing station
+
+We will not consider these variables in the predictive model: remove here, or use `tidymodels` `roles`?
+
+In order to accommodate variation in SST among stations, the CPUE value has been replicated multiple times. This would defeat our purpose of analysing data by group (fish species) over space and time: with only one value per group, a statistical analysis is a bit hard to be performed (no variation). Therefore, to the original CPUE values we add some random noise proportional to the average (by species, area, year):
+
+```{r preprocess}
+fish <- fish |>
+  group_by(Species, Area, Year) |>
+  mutate(avg = mean(CPUE), std = 0.1*avg)
+```
+
+```{r}
+fish <- fish |>
+  ungroup() |>
+  mutate(noise = rnorm(n = n(),mean = 0,sd = std), CPUE = CPUE + noise)
+```
+
+```{r}
+temp <- fish |>
+  select(-c(V1,Station,avg,std,noise))
+```
+
+
+## Block validation strategies
+
+We first block by time (longitudinal data), using the variable `Year`:
+
+### 1. Define the data split
+
+We order data by Year: data are balanced, there are 292 records per year.
+The last 4 Years of data therefore represent 17.39% of the data 
+
+```{r}
+temp <- temp |> 
+  arrange(Year)
+```
+
+```{r}
+(292*4)/sum(table(temp$Year))
+```
+
+
+```{r}
+splits      <- initial_time_split(temp, prop = 1-0.1739)
+fish_train <- training(splits)
+fish_test  <- testing(splits)
+```
+
+```{r}
+fish_train |>
+  group_by(Year) |>
+  summarise(N =n())
+```
+
+```{r}
+fish_test |>
+  group_by(Year) |>
+  summarise(N =n())
+```
+
+
+### 2. Define the model
+
+We use boosting (ensemble method) with hard-coded parameters:
+
+```{r}
+m = ncol(temp)-1 ##(CPUE: target variable)
+boost_mod <- 
+  boost_tree(mode = "regression", mtry = m, trees = 1000, min_n = 5, tree_depth = 5, learn_rate = 0.1) %>% 
+  set_engine("xgboost")
+```
+
+### 3. Define the recipe
+
+We define the recipe: the model equation, the filtering (zero variance predictors), the dummy variables for categorical predictors:
+
+```{r}
+boost_recipe <- 
+  recipe(CPUE ~ ., data = fish_train) %>% 
+  update_role(CPUE, new_role = "outcome") |>
+  step_zv(all_predictors()) %>% 
+  # step_normalize(all_numeric_predictors()) |>
+  step_dummy(all_nominal_predictors())
+```
+
+From the recipes, we can get the prepprocessed training (and testing) data:
+
+```{r}
+fish_prepped <- prep(boost_recipe)
+bake(fish_prepped, new_data = fish_train)
+```
+
+### 4. Define the workflow
+
+We bring together the model and the recipe in a single workflow:
+
+```{r}
+boost_workflow <- 
+  workflow() %>% 
+  add_model(boost_mod) %>% 
+  add_recipe(boost_recipe)
+```
+
+### 5. Fit the model
+
+We fit (train) the model on the training data:
+
+```{r}
+boost_fit <- 
+  boost_workflow %>% 
+  fit(data = fish_train)
+```
+
+### 6. Get model predictions and evaluate the model
+
+```{r}
+predict(boost_fit, fish_test)
+```
+
+```{r}
+test_aug <- 
+  augment(boost_fit, fish_test)
+```
+
+```{r}
+ggplot(test_aug, aes(.pred, CPUE)) + geom_point()
+```
+
+```{r}
+test_aug |>
+  summarise(avg = mean(CPUE),
+            accuracy = cor(.pred,CPUE),
+            N = n(),
+            RMSE = sqrt(sum((.pred - CPUE)^2)/N),
+            NRMSE = RMSE/avg)
+```
+
+
+#### Predictions by year?
+
+```{r}
+test_aug |>
+  group_by(Year) |>
+  summarise(avg = mean(CPUE),
+            accuracy = cor(.pred,CPUE),
+            N = n(),
+            RMSE = sqrt(sum((.pred - CPUE)^2)/N),
+            NRMSE = RMSE/avg)
+```
