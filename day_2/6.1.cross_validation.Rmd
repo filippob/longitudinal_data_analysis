@@ -1,5 +1,5 @@
 ---
-title: "cross-validation.Rmd"
+title: "cross validation"
 author: "Filippo Biscarini"
 date: "2023-06-21"
 output: html_document
@@ -15,6 +15,9 @@ library("tidymodels")
 
 knitr::opts_chunk$set(echo = TRUE)
 ```
+
+We introduce here resampling and cross-validation for predictive models in R.
+A random cross-validation approach is used.
 
 ## Read data
 
