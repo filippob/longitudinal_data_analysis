@@ -32,4 +32,4 @@ As a general rule, we'll have a longer break (30 minutes) at 16:00 and two short
 **Day 2**
 
 - Lab 4: diff-in-diff in R
-    - []
+    - [4.diff-in-diff.Rmd](4.diff-in-diff.Rmd)
