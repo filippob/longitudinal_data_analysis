@@ -1,0 +1,223 @@
+---
+title: "tidymodels"
+author: "Filippo Biscarini"
+date: "2023-06-21"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library("DT")
+library("broom")
+library("knitr")
+library("ggpubr")
+library("contrast")
+library("tidyverse")
+library("tidymodels")
+library("data.table")
+
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+A gentle introduction to `tidymodels`
+
+## Read the data
+
+Data from [The effects of lateral line ablation and regeneration in schooling giant danios](https://journals.biologists.com/jeb/article/221/8/jeb175166/300/The-effects-of-lateral-line-ablation-and) (data repo [here](https://zenodo.org/record/4999506))
+
+It's data on fish (*Devario aequipinnatus*) lateral line system, with the effect of chemical treatments (gentamycin or no treatment -- sham) at different timepoints.
+
+```{r read-the-bird-data}
+basefolder = "/home/filippo/Dropbox/cursos/longitudinal_data_analysis/longitudinal_data_analysis"
+inpfile = "data/lateral_line/JEXBIO-2017-175166-Processed-Data-Master.txt"
+fname = file.path(basefolder, inpfile)
+
+danios = fread(fname)
+```
+
+Dataset on *giant danios*: how the lateral line system responds to chemical treatments.
+
+Variables include:
+
+* nearest neighbor distance or NND (unit: body length),
+* time in school (percentage),
+* angular bearing (unit: degrees),
+* angular elevation (unit: degrees),
+* speed (body length per second).
+-   `Treatment`: gentamycin / sham (control)
+-   `Week`: time point in subsequent weeks (from week -1 to week 8)
+
+A little preprocessing:
+
+```{r}
+danios <- danios |>
+  mutate(Treatment = factor(Treatment, levels = c("Sham", "Gentamycin")))
+```
+
+
+Let's say that we want to study the correlation between two such variables, e.g. `NND` and `Time in School`.
+We can start from the entire dataset:
+
+```{r}
+ggplot(danios, aes(`Time in School`, NND)) + geom_jitter()
+```
+
+
+```{r}
+cor(danios$`Time in School`, danios$NND)
+```
+
+We see that overall there is a moderately negative relationship between the time spent in school and the distance between individuals (linear correlation coefficient = -0.43). 
+We also notice that there's a concentration of data points towards the maximum recorded value for time in school (100% time spent in school)
+
+We can look at the relationship between NND and Time in School stratifying by week (time) and treatment: `dplyr` (from `tidyverse`) gives us a nice way to do it.
+
+```{r}
+ggplot(danios, aes(`Time in School`, NND, color = Treatment)) +
+  geom_point() + facet_wrap(~Week, scales = "free_y")
+```
+
+```{r}
+danios |>
+  group_by(Week, Treatment) |>
+  summarise(correlation = cor(`Time in School`, NND))
+```
+
+What if we want to make a hypothesis test on the correlation coefficients?
+In this case the output is not a single number (as was the case with `cor`), but a complex object with vectors, strings, numbers, lists etc.
+
+```{r}
+ct = cor.test(danios$`Time in School`, danios$NND)
+ct
+```
+
+We can tidy it! (`broom` inside)
+
+```{r}
+broom::tidy(ct)
+```
+
+**Why `tidymodels`?**
+
+- perform multiple tests
+- fit multiple models 
+- on different subsets of the data
+
+The `nest-map-unnest` workflow is what we need. 
+
+Example: correlation tests for each Week and Treatment. 
+
+#### 1. Nesting
+
+We start by nesting our data based on the group -or groups- of interest:
+we need to pick the variables that are "nested" within group(s) (e.g. NND and Time in School nested within Week and Treatment).
+
+```{r}
+nested <- 
+  danios %>% 
+  select(NND, `Time in School`, Treatment, Week) |>
+  nest(data = c(NND, `Time in School`))
+
+nested
+```
+
+#### 2. Perform the analysis
+
+Then we perform the correlation test for each nested subset using `purrr::map()`:
+
+```{r}
+nested <- nested %>% 
+  mutate(test = map(data, ~ cor.test(.x$`Time in School`, .x$NND)))
+
+nested
+```
+
+#### 3. Tidy-up results
+
+```{r}
+nested <- nested |>
+  mutate(tidied = map(test, tidy))
+
+nested
+```
+
+#### 4. Unnest and visualize
+
+```{r}
+nested |>
+  unnest(cols = tidied) |>
+  select(-data, -test)
+```
+
+We could of course put all the steps together in a single workflow: **dare to try?**
+
+```{r}
+## your code here
+```
+
+
+### Tidy regression
+
+The output of linear regression (function `lm()`) is well known to be particularly "untidy".
+Let's take the example of Time in school as a function of treatment (gentamycin, control):
+
+```{r}
+lm_fit <- lm(`Time in School` ~ Treatment, data = danios)
+summary(lm_fit)
+```
+
+We can tidy it:
+
+```{r}
+broom::tidy(lm_fit)
+```
+
+And use `tidymodels` for the within-week regression analysis:
+
+```{r}
+danios %>%
+  select(`Time in School`, Treatment, Week) |>
+  nest(data = c(-Week)) %>% 
+  mutate(
+    fit = map(data, ~ lm(`Time in School` ~ Treatment, data = .x)),
+    tidied = map(fit, tidy)
+  ) %>% 
+  unnest(tidied) %>% 
+  select(-data, -fit)
+```
+
+We can use multiple `broom` functions at a time and save results:
+
+- `tidy`: tidies up results, e.g. estimates of coefficients and p-values
+- `glance`: returns overall goodness of fit measures of the model
+- `augment`: returns fitted values (predictions) and residuals, for model evaluation and model diagnostics
+
+```{r}
+regressions <- 
+  danios %>%
+  select(`Time in School`, Treatment, Week) |>
+  nest(data = c(-Week)) %>% 
+  mutate(
+    fit = map(data, ~ lm(`Time in School` ~ Treatment, data = .x)),
+    tidied = map(fit, tidy),
+    glanced = map(fit, glance),
+    augmented = map(fit, augment)
+) 
+```
+
+```{r}
+regressions %>% 
+  select(tidied) %>% 
+  unnest(tidied)
+```
+
+```{r}
+regressions %>% 
+  select(glanced) %>% 
+  unnest(glanced)
+```
+
+```{r}
+regressions %>% 
+  select(augmented) %>% 
+  unnest(augmented)
+```
