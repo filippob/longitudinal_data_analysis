@@ -5,7 +5,6 @@ date: "2023-06-21"
 output: html_document
 ---
 
-
 ```{r setup, include=FALSE}
 library("knitr")
 library("xgboost")
@@ -16,15 +15,13 @@ library("tidymodels")
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-After covering random cross-validation, we now introduce a more advanced topic:
-cross-validation for data with temporal, spatial, hierarchical or phylogenetic structure (stratified data).
+After covering random cross-validation, we now introduce a more advanced topic: cross-validation for data with temporal, spatial, hierarchical or phylogenetic structure (stratified data).
 
 We are using the same dataset on fish catch.
 
 ## Read data
 
-Data from [Spatiotemporally explicit model averaging for forecasting of Alaskan groundfish catch](https://onlinelibrary.wiley.com/doi/10.1002/ece3.4488)
-(data repo [here](https://zenodo.org/record/4987796#.ZHcLL9JBxhE))
+Data from [Spatiotemporally explicit model averaging for forecasting of Alaskan groundfish catch](https://onlinelibrary.wiley.com/doi/10.1002/ece3.4488) (data repo [here](https://zenodo.org/record/4987796#.ZHcLL9JBxhE))
 
 It's data on fish catch (multiple fish species) over time in different regions of Alaska.
 
@@ -43,8 +40,8 @@ fish = fread(fname)
 
 ### Data preprocessing
 
-- `V1` is record ID
-- `Station` indicates the fishing station
+-   `V1` is record ID
+-   `Station` indicates the fishing station
 
 We will not consider these variables in the predictive model: remove here, or use `tidymodels` `roles`?
 
@@ -64,9 +61,8 @@ fish <- fish |>
 
 ```{r}
 temp <- fish |>
-  select(-c(V1,Station,avg,std,noise))
+  dplyr::select(-c(V1,Station,avg,std,noise))
 ```
-
 
 ## Block validation strategies
 
@@ -74,8 +70,7 @@ We first block by time (longitudinal data), using the variable `Year`:
 
 ### 1. Define the data split
 
-We order data by Year: data are balanced, there are 292 records per year.
-The last 4 Years of data therefore represent 17.39% of the data 
+We order data by Year: data are balanced, there are 292 records per year. The last 4 Years of data therefore represent 17.39% of the data
 
 ```{r}
 temp <- temp |> 
@@ -86,25 +81,25 @@ temp <- temp |>
 (292*4)/sum(table(temp$Year))
 ```
 
-
 ```{r}
 splits      <- initial_time_split(temp, prop = 1-0.1739)
 fish_train <- training(splits)
-fish_test  <- testing(splits)
+fish_test  <- testing(splits) ## last 4 years of data
 ```
 
 ```{r}
 fish_train |>
   group_by(Year) |>
-  summarise(N =n())
+  summarise(N =n()) |>
+  kable(format = "html", table.attr = "style = \"color: white;\"")
 ```
 
 ```{r}
 fish_test |>
   group_by(Year) |>
-  summarise(N =n())
+  summarise(N =n()) |>
+  kable(format = "html", table.attr = "style = \"color: white;\"")
 ```
-
 
 ### 2. Define the model
 
@@ -150,7 +145,7 @@ boost_workflow <-
 
 ### 5. Fit the model
 
-We fit (train) the model on the training data:
+We fit (train) the model on the training data (old data, everything but the last 4 years):
 
 ```{r}
 boost_fit <- 
@@ -159,6 +154,8 @@ boost_fit <-
 ```
 
 ### 6. Get model predictions and evaluate the model
+
+We evaluate the model on the test data (new data: only the last 4 years):
 
 ```{r}
 predict(boost_fit, fish_test)
@@ -170,7 +167,7 @@ test_aug <-
 ```
 
 ```{r}
-ggplot(test_aug, aes(.pred, CPUE)) + geom_point()
+ggplot(test_aug, aes(.pred, CPUE)) + geom_point(aes(color=Species))
 ```
 
 ```{r}
@@ -179,7 +176,8 @@ test_aug |>
             accuracy = cor(.pred,CPUE),
             N = n(),
             RMSE = sqrt(sum((.pred - CPUE)^2)/N),
-            NRMSE = RMSE/avg)
+            NRMSE = RMSE/avg) |>
+  kable(format = "html", table.attr = "style = \"color: white;\"")
 ```
 
 #### Predictions by year?
@@ -203,19 +201,6 @@ nested <-
 ```
 
 ```{r}
-# m = round((ncol(temp)-1)/3,0) ## this is 4 in this example
-
-
-boost_recipe <- 
-  recipe(CPUE ~ ., data = fish_train) %>% 
-  update_role(CPUE, new_role = "outcome") |>
-  step_zv(all_predictors()) |>
-  step_dummy(all_nominal_predictors())
-
-
-```
-
-```{r}
 fit_boosting = function(x) {
   
   splits = initial_time_split(x, prop = 1-0.1739) ## we are lucky: data are perfectly balanced!!
@@ -234,8 +219,6 @@ fit_boosting = function(x) {
 }
 ```
 
-
-
 ```{r}
 nested <- nested %>% 
   mutate(modeval = map(data, ~ fit_boosting(.x)))
@@ -243,7 +226,8 @@ nested <- nested %>%
 
 ```{r}
 nested |> 
-  unnest(modeval)
+  unnest(modeval) |>
+  select(-c(data))
 ```
 
 ```{r}
@@ -253,10 +237,8 @@ temp |>
 
 ## Exercise: try blocking by a different data structure (e.g. geography or species)
 
-Rather than `Year`, pick a different blocking variable and implement cross-validation 
-(the validation set approach) to predict in a block based on training on all other blocks.
+Rather than `Year`, pick a different blocking variable and implement cross-validation (the validation set approach) to predict in a block based on training on all other blocks.
 
 ```{r}
 ## your code here!
 ```
-
