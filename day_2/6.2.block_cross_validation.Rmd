@@ -111,7 +111,7 @@ fish_test |>
 We use boosting (ensemble method) with hard-coded parameters:
 
 ```{r}
-m = ncol(temp)-1 ##(CPUE: target variable)
+m = round((ncol(temp)-1)/3,0) ##(CPUE: target variable)
 boost_mod <- 
   boost_tree(mode = "regression", mtry = m, trees = 1000, min_n = 5, tree_depth = 5, learn_rate = 0.1) %>% 
   set_engine("xgboost")
@@ -182,7 +182,6 @@ test_aug |>
             NRMSE = RMSE/avg)
 ```
 
-
 #### Predictions by year?
 
 ```{r}
@@ -194,3 +193,70 @@ test_aug |>
             RMSE = sqrt(sum((.pred - CPUE)^2)/N),
             NRMSE = RMSE/avg)
 ```
+
+### Adding geography and phylogeny?
+
+```{r}
+nested <- 
+  temp %>% 
+  nest(data = -c(Area, Species))
+```
+
+```{r}
+# m = round((ncol(temp)-1)/3,0) ## this is 4 in this example
+
+
+boost_recipe <- 
+  recipe(CPUE ~ ., data = fish_train) %>% 
+  update_role(CPUE, new_role = "outcome") |>
+  step_zv(all_predictors()) |>
+  step_dummy(all_nominal_predictors())
+
+
+```
+
+```{r}
+fit_boosting = function(x) {
+  
+  splits = initial_time_split(x, prop = 1-0.1739) ## we are lucky: data are perfectly balanced!!
+  dt_train = training(splits)
+  dt_test = testing(splits)
+
+  boost_mod = boost_tree(mode = "regression", mtry = 4, trees = 1000, min_n = 5, tree_depth = 5, learn_rate = 0.1) |> set_engine("xgboost")
+  boost_recipe = recipe(CPUE ~ ., data = dt_train) |> update_role(CPUE, new_role = "outcome") |> step_zv(all_predictors()) |> step_dummy(all_nominal_predictors())
+  boost_workflow =  workflow() |> add_model(boost_mod) |> add_recipe(boost_recipe)
+  boost_fit = boost_workflow |> fit(data = dt_train)
+  
+  test_aug = augment(boost_fit, dt_test)
+  results = test_aug |> summarise(avg = mean(CPUE), accuracy = cor(.pred,CPUE), N = n(), RMSE = sqrt(sum((.pred - CPUE)^2)/N), NRMSE = RMSE/avg)
+  
+  return(results)
+}
+```
+
+
+
+```{r}
+nested <- nested %>% 
+  mutate(modeval = map(data, ~ fit_boosting(.x)))
+```
+
+```{r}
+nested |> 
+  unnest(modeval)
+```
+
+```{r}
+temp |>
+  filter(Species == "Pacific cod", Area == "Central Gulf of Alaska")
+```
+
+## Exercise: try blocking by a different data structure (e.g. geography or species)
+
+Rather than `Year`, pick a different blocking variable and implement cross-validation 
+(the validation set approach) to predict in a block based on training on all other blocks.
+
+```{r}
+## your code here!
+```
+
