@@ -23,8 +23,13 @@ As a general rule, we'll have a longer break (30 minutes) at 16:00 and two short
 - Lab 2: Treatments and timepoints in R [Filippo]
     - [2.1.treatments_and_timepoints.Rmd](day_1/2.1.treatments_and_timepoints.Rmd)
     - [2.2.exercise.Rmd](day_1/2.2.exercise.Rmd)
-    - [2.3.linear_regression_with_tidymodels.Rmd]()
+    - [2.3.linear_regression_with_tidymodels.Rmd](day_1/2.3.linear_regression_with_tidymodels.Rmd)
 - Lecture 3: [The classical statistical perspective](slides/) [Filippo]
 - Lab 3: Models to analyse data with repeated records over time (multiple time points) and space (multiple locations) in R
     - [3.repeated_records.Rmd](day_1/3.repeated_records.Rmd)
+- Lecture 4: Difference-in-differences (diff-in-diff) [Filippo]
+ 
+**Day 2**
 
+- Lab 4: diff-in-diff in R
+    - [4.diff-in-diff.Rmd](4.diff-in-diff.Rmd)
