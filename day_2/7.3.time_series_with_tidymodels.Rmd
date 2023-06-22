@@ -1,0 +1,147 @@
+---
+title: "Forecasting with tidymodels"
+author: "Filippo Biscarini"
+date: "2023-06-22"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library("zoo")
+library("sweep")
+library("timetk")
+library("forecast") 
+library("modeldata")
+library("tidyverse")
+library("tidymodels")
+
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+We now look very briefly at one example of using `tidymodels` to analyse time-series data. 
+
+## Stillbirth data
+
+We use the European stillbirth data that we used in the previous illustrations on time series.
+
+```{r read-plankton-data}
+basefolder = "/home/filippo/Dropbox/cursos/longitudinal_data_analysis/longitudinal_data_analysis"
+inpfile = "data/stillbirth/sbr_all.xlsx"
+fname = file.path(basefolder, inpfile)
+
+stillbirth = readxl::read_xlsx(fname, sheet = 2)
+```
+
+We select the data from Sweden (more complete time-series) and convert numeric `year` to `date`
+
+```{r}
+temp = stillbirth |> select(year, sbr_swe)
+temp = na.omit(temp)
+temp <- temp |>
+  mutate(year = as.Date(as.yearmon(year)))
+```
+
+#### Resampling
+
+We use 200 years of data to forecast the next year using a rolling resampling strategy: we get 47 subsequent resampled datasets (n_records - training - validation + 1 = 247-200-1+1 = 47)
+
+```{r}
+stillbirth_rs <- rolling_origin(
+  temp, 
+  initial = 200, 
+  assess = 1,
+  cumulative = FALSE
+  )
+
+nrow(stillbirth_rs)
+```
+
+We get the start date for each validation (assessment) split:
+
+```{r}
+get_date <- function(x) {
+  min(assessment(x)$year)
+}
+
+start_date <- map(stillbirth_rs$splits, get_date) ## get start date for each split
+stillbirth_rs$start_date <- do.call("c", start_date)
+head(stillbirth_rs$start_date)
+```
+
+This **rolling resampling scheme** has 47 splits of the data;
+so there will be **47 ARIMA models** to be fitted. 
+To create the models, we use the `auto.arima()` function from the `forecast` package. 
+The `rsample` functions `analysis()` and `assessment()` return a data frame, 
+so another step converts the data to a `ts` object using a function from the `timetk` package.
+
+```{r}
+fit_model <- function(x, ...) {
+  # suggested by Matt Dancho:
+  x |>
+    analysis() |>
+    tk_ts() |>
+    auto.arima(...)
+}
+```
+
+We now fit tge ARIMA model to the 47 splits of the data:
+
+```{r}
+stillbirth_rs$arima <- map(stillbirth_rs$splits, fit_model)
+```
+
+We can now look at the results from one such model (one partition of the data)
+ARIMA: non-seasonal e.g. (2,2,2) and seasonal e.g. (0,1,0) parts of the (S)ARIMA model
+
+```{r}
+stillbirth_rs$arima[[1]]
+```
+
+### Model evaluation
+
+We can measure model performance in two ways:
+
+- **Interpolation error** (training error): measures how well the model fits to the data that were used to create the model. This is most likely optimistic since no hold-out data are used
+- **Extrapolation or forecast error** (validation error): evaluates the performance of the model on the data from the following year (that were not used in the model fit).
+
+In both cases we use the metric MAPE (mean absolute percentage error):
+
+```{r}
+stillbirth_rs$interpolation <- purrr::map_dbl(
+  stillbirth_rs$arima,
+  function(x) 
+    sw_glance(x)[["MAPE"]]
+  )
+
+summary(stillbirth_rs$interpolation)
+```
+
+Now the **extrapolation error**:
+
+```{r}
+get_extrap <- function(split, mod) {
+  n <- nrow(assessment(split))
+  # Get assessment data
+  pred_dat <- assessment(split) %>%
+    mutate(
+      pred = as.vector(forecast(mod, h = n)$mean),
+      pct_error = ( sbr_swe - pred ) / sbr_swe * 100
+    )
+  mean(abs(pred_dat$pct_error))
+}
+
+stillbirth_rs$extrapolation <- 
+  map2_dbl(stillbirth_rs$splits, stillbirth_rs$arima, get_extrap)
+
+summary(stillbirth_rs$extrapolation)
+```
+
+```{r}
+stillbirth_rs %>%
+  select(interpolation, extrapolation, start_date) %>%
+  pivot_longer(cols = matches("ation"), names_to = "error", values_to = "MAPE") %>%
+  ggplot(aes(x = start_date, y = MAPE, col = error)) + 
+  geom_point() + 
+  geom_line()
+
+```
+
