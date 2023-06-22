@@ -1,0 +1,134 @@
+---
+title: "Survival analysis"
+author: "Filippo Biscarini"
+date: "21/06/2023"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library("knitr")
+library("tidyverse")
+
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## A primer on survival analysis
+
+## Cox models
+
+The Cox proportional-hazards model (Cox, 1972) is essentially a regression model commonly used in medical research for investigating the association between the survival time of patients and one or more predictor variables.
+
+### Time-to-event data
+
+**time-to-event data (survival analysis)**:
+
+Examples of types of events:
+
+- Relapse
+- Progression
+- Death
+
+Characteristics of time events:
+
+- subjects enter at different times and have different duration of follow-up
+- entire survival experience, not just the percentages who remain alive at the end of the study
+- the survival distributions may differ even though the five-year survival rates are similar
+
+
+## Survival analysis
+```{r}
+library("survival")
+library("survminer")
+
+data("lung")
+head(lung)
+```
+
+- a survival object created using the function `Surv()`: survival time (time from enrollment to end of study), status at the end of study (dead/censored)
+- the data set containing the variables: covariates (e.g. sex)
+
+```{r}
+fit <- survfit(Surv(time, status) ~ sex, data = lung)
+print(fit)
+```
+```{r, label='kaplar-meier-curve', fig.height=10, fig.width=10}
+# Change color, linetype by strata, risk.table color by strata
+ggsurvplot(fit,
+          pval = TRUE, conf.int = TRUE,
+          pval.method = TRUE,
+          risk.table = TRUE, # Add risk table
+          risk.table.col = "strata", # Change risk table color by groups
+          linetype = "strata", # Change line type by groups
+          surv.median.line = "hv", # Specify median survival
+          ncensor.plot = TRUE,
+          ggtheme = theme_bw(), # Change ggplot2 theme
+          palette = c("#E7B800", "#2E9FDF"))
+```
+
+```{r}
+ggsurvplot(fit,
+          conf.int = TRUE,
+          risk.table.col = "strata", # Change risk table color by groups
+          ggtheme = theme_bw(), # Change ggplot2 theme
+          palette = c("#E7B800", "#2E9FDF"),
+          fun = "event")
+```
+
+#### Cummulative hazard 
+
+It is defined as $H(t)=−log(survivalfunction)=−log(S(t))$
+
+The cumulative hazard ($H(t)$) corresponds to the number of events that would be expected for each individual by time `t` if the event were a repeatable process
+
+```{r}
+ggsurvplot(fit,
+          conf.int = TRUE,
+          risk.table.col = "strata", # Change risk table color by groups
+          ggtheme = theme_bw(), # Change ggplot2 theme
+          palette = c("#E7B800", "#2E9FDF"),
+          fun = "cumhaz")
+```
+
+#### Kaplan-Meier life table: summary of survival curves
+
+```{r}
+res.sum <- surv_summary(fit)
+head(res.sum)
+```
+
+#### Log-Rank test comparing survival curves: survdiff()
+
+```{r}
+surv_diff <- survdiff(Surv(time, status) ~ sex, data = lung)
+surv_diff
+```
+
+## From Kaplan-Meier curves to Cox models
+
+Kaplan-Meier curves and log-rank tests are useful for univariate analysis, describing survival in terms of one factor under investigation, and typically work only with categorical predictors (e.g. sex, treatment A vs treatment B etc.)
+
+This is where **Cox proportional hazards regression analysis** comes in handy: it works for both quantitative predictor variables and for categorical variables. Furthermore, the Cox regression model extends survival analysis methods to assess simultaneously the effect of several risk factors on survival time.
+
+Cox models examine how specified factors (**covariates**) influence the rate (**hazard rate**) of a particular event happening (e.g., infection, death) at a particular point in time
+
+The Cox model is expressed by the **hazard function** denoted by $h(t)$, interpretable as the risk of dying at time `t`:
+
+$$
+h(t)=h_0(t) \cdot exp(\beta_1x_1 + \beta_2x_2 + \ldots + beta_kx_k)
+$$
+
+```{r}
+res.cox <- coxph(Surv(time, status) ~ sex, data = lung)
+res.cox
+```
+
+#### Multiple Cox regression model
+
+```{r}
+res.cox <- coxph(Surv(time, status) ~ age + sex + ph.ecog, data =  lung)
+summary(res.cox)
+```
+```{r}
+library("lmtest")
+lrtest(res.cox,"ph.ecog")
+```
