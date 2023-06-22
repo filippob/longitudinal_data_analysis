@@ -33,6 +33,9 @@ As a general rule, we'll have a longer break (30 minutes) at 16:00 and two short
 
 - Lab 4: diff-in-diff in R
     - [4.diff-in-diff.Rmd](4.diff-in-diff.Rmd)
+- Lecture 5: Censored data and survival analysis
+- Lab 5: Survival analysis in R
+    - [5.survival_analysis.Rmd](day_2/5.survival_analysis.Rmd)
 - Lecture 6: Cross-validation: simple and with spatial, temporal (or other) data structure
 - Lab 6: Cross-validation strategies in R
     - [6.1.cross_validation.Rmd](day_2/6.1.cross_validation.Rmd)
