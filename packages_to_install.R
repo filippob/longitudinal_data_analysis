@@ -4,6 +4,7 @@
 library("DT")
 library("fpp")
 library("plm")
+library("fpp2")
 library("broom")
 library("knitr")
 library("sommer")
