@@ -110,31 +110,28 @@ co2x <- window(co2, start=1980)
 gglagplot(co2x, lags = 6)
 ```
 
-```{r read-plankton-data}
+#### European stillbirth data
+
+European Stillbirth Rate Time Series Dataset (data repo at: https://zenodo.org/record/6505519)
+
+```{r read-stillbirth-data}
 basefolder = "/home/filippo/Dropbox/cursos/longitudinal_data_analysis/longitudinal_data_analysis"
-inpfile = "data/planktontimeseries/Acartia_spp_(unidentified).csv"
+inpfile = "data/stillbirth/sbr_all.xlsx"
 fname = file.path(basefolder, inpfile)
 
-plankton = fread(fname, header = TRUE)
-row.names(plankton) <- as.character(plankton$`0`)
-# plankton <- select(plankton, -`0`)
-plk = ts(t(plankton), start=1958, end=2013, names = plankton$`0`)
+stillbirth = readxl::read_xlsx(fname, sheet = 2)
 ```
 
 ```{r}
-autoplot(plk)
+temp = ts(stillbirth[,-1], start = 1775, end = 2021, names = names(stillbirth)[-1])
 ```
 
 ```{r}
-autoplot(log(plk))
+autoplot(temp)
 ```
 
-```{r}
-GGally::ggpairs(as.data.frame(plk[,1:5]))
-```
-
-```{r}
-corrplot(cor(plk))
+```{r, warning=FALSE, message=FALSE}
+GGally::ggpairs(as.data.frame(temp[,-3]))
 ```
 
 
@@ -215,7 +212,7 @@ ggAcf(elecdemand2[,"Temperature"])
 ```
 
 ```{r}
-ggAcf(plk[,1])
+ggAcf(temp[,7])
 ```
 
 ### White noise time series

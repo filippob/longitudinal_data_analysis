@@ -209,6 +209,8 @@ lines(ts(one_step_ahead_sarima[,2], start = c(1957,1), frequency = 12), col="red
 
 ## Stillbirth data
 
+European Stillbirth Rate Time Series Dataset (data repo at: https://zenodo.org/record/6505519)
+
 ```{r read-plankton-data}
 basefolder = "/home/filippo/Dropbox/cursos/longitudinal_data_analysis/longitudinal_data_analysis"
 inpfile = "data/stillbirth/sbr_all.xlsx"
@@ -223,8 +225,7 @@ temp = na.omit(temp)
 ```
 
 ```{r}
-temp$year <- NULL
-temp = ts(temp, start = 1775, end = 2021)
+temp = ts(temp$sbr_swe, start = 1775, end = 2021)
 ```
 
 
@@ -262,6 +263,6 @@ MAPE(one_step_ahead_sarima[,1], one_step_ahead_sarima[,2]) * 100
 ```
 
 ```{r}
-plot(data, col="blue", xlab="Year", ylab="Passengers", main="SARIMA Forecast", type='l')
-lines(ts(one_step_ahead_sarima[,2], start = 1, frequency = 1), col="red", lwd=3)
+plot(temp, col="blue", xlab="Year", ylab="Stillbirth", main="SARIMA Forecast", type='l')
+lines(ts(one_step_ahead_sarima[,2], start = 2000, frequency = 1), col="red", lwd=3)
 ```
