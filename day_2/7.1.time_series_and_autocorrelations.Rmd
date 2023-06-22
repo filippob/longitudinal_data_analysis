@@ -1,0 +1,112 @@
+---
+title: "Time series and autocorrelations"
+author: "Filippo Biscarini"
+date: "2023-06-22"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+
+library("ggplot2")
+library("tseries")
+library("forecast")
+library("tidyverse")
+
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Autocorrelation is used to measure the degree of similarity between a time series and a lagged version of itself over the given range of time intervals. 
+We can also call autocorrelation as *serial correlation* or *lagged correlation*. 
+It is mainly used to measure the relationship between the actual values and the previous values.
+
+Data on Mauna Loa monthly atmospheric $\text{CO}_2$ concentration
+
+```{r co2}
+data(co2)
+co2
+```
+
+```{r}
+plot(co2)
+```
+
+
+```{r}
+co2_df = data.frame("CO2" = co2)
+co2_df$year = rep(seq(1959,1997), each=12)
+co2_df$month = rep(month.abb, times=(1997-1959+1))
+
+co2_df <- co2_df |>
+  mutate(month = factor(month, levels = c(month.abb)),
+         year = factor(year),
+         CO2 = as.numeric(CO2))
+```
+
+```{r}
+ggplot(co2_df, aes(x = month, y = CO2, group=year)) + geom_line(aes(color=year))
+```
+
+$$
+r_k = \frac{\sum_{t=k+1}^T (y_t-\bar{y})(y_{t-k}-\bar{y})}{\sum_{t=1}^T(y_t-\bar{y})^2}
+$$
+
+```{r}
+v = c(12,34,56,30,23,15,28,36,45,31,21,10,29,40,58,64,78,90)
+plot(v)
+```
+
+
+With lag = 0, the autocorrelation is clearly $1$: $\frac{\sum (y_t-\bar{y}) \cdot (y_t-\bar{y})}{\sum (y_t-\bar{y})^2}$.
+
+With lag = $1$, we calculate the correlation between the two vectors ($n$ is the length of the vector):
+
+- v[2,n]
+- v[1,n-1]
+
+```{r}
+n = length(v)
+v_avg = mean(v)
+v1 = v[2:n]
+v2 = v[1:(n-1)]
+
+## autocorrelation with lag = 1
+r1 = ((v1 - v_avg) %*% (v2 - v_avg))/((v - v_avg) %*% (v - v_avg))
+print(r1)
+```
+
+**Q: can you calculate the autocorrelation with lag = 2?** (let's do this together!)
+
+```{r}
+## your code here!!
+```
+
+
+
+The `acf()` function from the `stats` package:
+
+- input vector (time series or spatial series etc.)
+- lag
+
+```{r}
+acf(v, plot = FALSE)
+```
+
+```{r}
+data(ausbeer)
+beer2 <- window(ausbeer, start=1992)
+```
+
+```{r}
+acf(beer2, plot = FALSE)
+```
+
+```{r}
+ggAcf(beer2)
+```
+
+
+```{r}
+acf(co2, plot = FALSE)
+```
+
+
