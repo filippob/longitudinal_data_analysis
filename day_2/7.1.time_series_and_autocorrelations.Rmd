@@ -7,29 +7,47 @@ output: html_document
 
 ```{r setup, include=FALSE}
 
+library("fpp")
+library("fpp2")
+library("GGally")
 library("ggplot2")
 library("tseries")
+library("corrplot")
 library("forecast")
 library("tidyverse")
+library("data.table")
 
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-Autocorrelation is used to measure the degree of similarity between a time series and a lagged version of itself over the given range of time intervals. 
-We can also call autocorrelation as *serial correlation* or *lagged correlation*. 
-It is mainly used to measure the relationship between the actual values and the previous values.
+## Time series
+
+A time series is a list of numbers ordered by time. 
+Time series-like objects can be also other types of ordered data: e.g. spatial series (geographical proximity), genome sequences (e.g. adjacent loci/nucelotides).
+More generally, these data are known as **sequence data** (text, sounds are other types of sequence data).
+
+
+In R, time series data can be stored as a `ts` object.
 
 Data on Mauna Loa monthly atmospheric $\text{CO}_2$ concentration
 
 ```{r co2}
 data(co2)
-co2
+class(co2)
 ```
 
 ```{r}
-plot(co2)
+co2
 ```
 
+
+```{r}
+autoplot(co2) + ggtitle("Monthly atmospheric CO2 concentration in Manua Loa")
+```
+
+```{r}
+autoplot(ts(co2, start=1980)) + ggtitle("Monthly atmospheric CO2 concentration in Manua Loa")
+```
 
 ```{r}
 co2_df = data.frame("CO2" = co2)
@@ -45,6 +63,86 @@ co2_df <- co2_df |>
 ```{r}
 ggplot(co2_df, aes(x = month, y = CO2, group=year)) + geom_line(aes(color=year))
 ```
+
+```{r}
+ggseasonplot(co2, year.labels=TRUE, year.labels.left=TRUE) +
+  ylab("CO2") +
+  ggtitle("Seasonal plot: atmospheric CO2 concentration")
+```
+
+```{r}
+ggseasonplot(co2, polar=TRUE) +
+  ylab("CO2") +
+  ggtitle("Polar seasonal plot: atmospheric CO2 cincentration")
+```
+
+```{r}
+ggsubseriesplot(co2) +
+  ylab("CO2") +
+  ggtitle("Subseries plot: monthly CO2 concentration in the atmosphere over the 1959-1997 period")
+```
+
+The horizontal lines indicate the means for each month. This plot highlights the underlying seasonal pattern to be seen clearly, and also shows the changes in seasonality over time.
+
+Now we use data from two paired time series: electricity demand (Gigawatts) and temeprature (Celsius degrees) from Victoria (Australia) in 2014:
+
+```{r}
+data(elecdemand) ## from fpp2
+head(elecdemand)
+```
+
+```{r}
+autoplot(elecdemand[,c("Demand","Temperature")], facets=TRUE) +
+  xlab("Year: 2014") + ylab("") +
+  ggtitle("Half-hourly electricity demand: Victoria, Australia")
+```
+
+We can use a scatterplot to look at the relationship between these two time series:
+
+```{r}
+df <- as.data.frame(elecdemand)
+ggplot(df, aes(Temperature, Demand)) + geom_point()
+```
+
+
+```{r}
+co2x <- window(co2, start=1980)
+gglagplot(co2x, lags = 6)
+```
+
+```{r read-plankton-data}
+basefolder = "/home/filippo/Dropbox/cursos/longitudinal_data_analysis/longitudinal_data_analysis"
+inpfile = "data/planktontimeseries/Acartia_spp_(unidentified).csv"
+fname = file.path(basefolder, inpfile)
+
+plankton = fread(fname, header = TRUE)
+row.names(plankton) <- as.character(plankton$`0`)
+# plankton <- select(plankton, -`0`)
+plk = ts(t(plankton), start=1958, end=2013, names = plankton$`0`)
+```
+
+```{r}
+autoplot(plk)
+```
+
+```{r}
+autoplot(log(plk))
+```
+
+```{r}
+GGally::ggpairs(as.data.frame(plk[,1:5]))
+```
+
+```{r}
+corrplot(cor(plk))
+```
+
+
+## Autocorrelations
+
+Autocorrelation is used to measure the degree of similarity between a time series and a lagged version of itself over the given range of time intervals. 
+We can also call autocorrelation as *serial correlation* or *lagged correlation*. 
+It is mainly used to measure the relationship between the actual values and the previous values.
 
 $$
 r_k = \frac{\sum_{t=k+1}^T (y_t-\bar{y})(y_{t-k}-\bar{y})}{\sum_{t=1}^T(y_t-\bar{y})^2}
@@ -92,21 +190,57 @@ acf(v, plot = FALSE)
 ```
 
 ```{r}
-data(ausbeer)
-beer2 <- window(ausbeer, start=1992)
+forecast::ggAcf(ts(v))
 ```
 
 ```{r}
-acf(beer2, plot = FALSE)
+acf(co2, lag = 3, plot = FALSE)
 ```
 
 ```{r}
-ggAcf(beer2)
+acf(co2, lag.max = 8, plot = FALSE)
 ```
-
 
 ```{r}
-acf(co2, plot = FALSE)
+ggAcf(co2)
 ```
 
+```{r}
+time(elecdemand)[17000]
+elecdemand2 <- window(elecdemand, start = 2014.95)
+ggAcf(elecdemand2[,"Demand"])
+```
+```{r}
+ggAcf(elecdemand2[,"Temperature"])
+```
 
+```{r}
+ggAcf(plk[,1])
+```
+
+### White noise time series
+
+Time series that show no autocorrelation are called white noise. Figure 2.17 gives an example of a white noise series.
+
+```{r}
+y <- ts(rnorm(50))
+autoplot(y) + ggtitle("White noise")
+```
+
+```{r}
+ggAcf(y)
+```
+
+For **white noise series**, we expect each autocorrelation to be close to zero. 
+Of course, they will not be exactly equal to zero as there is random variation. 
+For a white noise series, we expect $95\%$ of the spikes in the autocorrelation plot to lie within  
+$ \pm \frac{2}{\sqrt{T}}$ where $T$ is the length of the time series. 
+
+It is common to plot these bounds on the graph (the blue dashed lines above). 
+If one or more large spikes are outside these bounds, or if substantially more than 5% of spikes are outside these bounds, then the series is probably not white noise.
+
+In this white noise series, $T = 50$ and so the bounds are at $\pm \frac{2}{\sqrt{50}}= \pm 0.28$. 
+All of the autocorrelation coefficients lie within these limits, confirming that the data are white noise.
+
+ 
+ 
