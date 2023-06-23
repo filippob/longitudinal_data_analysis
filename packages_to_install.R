@@ -27,3 +27,26 @@ library("lubridate")
 library("tidyverse")
 library("tidymodels")
 library("data.table")
+
+## day 3
+library("gt")         # nice t
+library("car")        # useful for anova/wald test
+library("Epi")        # easy getting CI for model coef/pred
+library("lme4")       # linear mixed-effects models
+library("rstatix")    # summary statistics
+library("emmeans")    # marginal means
+library("geepack")    # generalized estimating equations
+library("labelled")   # labeling data
+library("lmerTest")   # test for linear mixed-effects models
+library("multcomp")   # CI for linear combinations of model coef
+library("ggeffects")  # marginal effects, adjusted predictions
+
+
+## day 4
+library("grid")
+library("igraph")
+library("Matrix")
+library("reshape2")
+library("gridExtra")
+library("surveillance")
+
