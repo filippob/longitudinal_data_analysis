@@ -9,9 +9,12 @@ output: html_document
 library("astsa")
 library("forecast")
 library("MLmetrics")
+library("tidyverse")
 
 knitr::opts_chunk$set(echo = TRUE)
 ```
+
+We want to forecast future observations based on past observations:
 
 - Naive methods
 - Exponential Smoothing models
@@ -19,6 +22,7 @@ knitr::opts_chunk$set(echo = TRUE)
 - ARIMA/SARIMA models
 - How to set up a one-step-ahead forecast
 
+We use a dataset of monthly totals (1000s) of international airline passengers between 1949 and 1960:
 
 ```{r airpassengers}
 data(AirPassengers)
@@ -91,7 +95,7 @@ MAPE(ets_forecast$mean, validation) *100
 ```
 
 ```{r}
-plot(AirPassengers, col="blue", xlab="Year", ylab="Passengers", main="Seasonal Naive Forecast", type='l')
+plot(AirPassengers, col="blue", xlab="Year", ylab="Passengers", main="Exponential smoothing", type='l')
 lines(ets_forecast$mean, col="red", lwd=2)
 ```
 
@@ -106,7 +110,7 @@ MAPE(ets_forecast$mean, validation) *100
 ```
 
 ```{r}
-plot(AirPassengers, col="blue", xlab="Year", ylab="Passengers", main="Seasonal Naive Forecast", type='l')
+plot(AirPassengers, col="blue", xlab="Year", ylab="Passengers", main="Exponential smoothing - Holt method", type='l')
 lines(ets_forecast$mean, col="red", lwd=2)
 ```
 
@@ -188,7 +192,7 @@ nmonths = 48
 
 for (i in 1:nmonths) {
   
-  training_observed = window(data, start = c(1949,1), end = c(1956,(12+i)), frequency = 12)
+  training_observed = window(AirPassengers, start = c(1949,1), end = c(1956,(12+i)), frequency = 12)
   
   forecasted.sarima = sarima.for(training_observed,n.ahead=1,p=0,d=1,q=1,P=1,D=1,Q=0,S=12, plot = FALSE)
   
@@ -203,7 +207,7 @@ MAPE(one_step_ahead_sarima[,1], one_step_ahead_sarima[,2]) * 100
 ```
 
 ```{r}
-plot(data, col="blue", xlab="Year", ylab="Passengers", main="SARIMA Forecast", type='l')
+plot(AirPassengers, col="blue", xlab="Year", ylab="Passengers", main="SARIMA Forecast", type='l')
 lines(ts(one_step_ahead_sarima[,2], start = c(1957,1), frequency = 12), col="red", lwd=3)
 ```
 
@@ -220,7 +224,7 @@ stillbirth = readxl::read_xlsx(fname, sheet = 2)
 ```
 
 ```{r}
-temp = stillbirth |> select(year, sbr_swe)
+temp = stillbirth |> dplyr::select(year, sbr_swe)
 temp = na.omit(temp)
 ```
 
@@ -266,3 +270,79 @@ MAPE(one_step_ahead_sarima[,1], one_step_ahead_sarima[,2]) * 100
 plot(temp, col="blue", xlab="Year", ylab="Stillbirth", main="SARIMA Forecast", type='l')
 lines(ts(one_step_ahead_sarima[,2], start = 2000, frequency = 1), col="red", lwd=3)
 ```
+
+## Normalising time series data?
+
+```{r}
+temp_norm = stillbirth |> dplyr::select(year, sbr_swe)
+temp_norm = na.omit(temp_norm)
+```
+
+```{r}
+x = diff(temp_norm$sbr_swe)
+z = temp_norm$sbr_swe[-nrow(temp_norm)]
+temp_norm$sbr_swe_norm = c(0,(x/z)*100)
+temp_norm$sbr_swe <- NULL
+```
+
+```{r}
+temp_norm = ts(temp_norm$sbr_swe_norm, start = 1775, end = 2021)
+```
+
+
+```{r}
+#Create training and validation sets: time-wise
+training = window(temp_norm, start = 1775, end = 1999)
+validation = window(temp_norm, start = 2000)
+```
+
+
+```{r}
+sarima_forecast = astsa::sarima.for(training, n.ahead=length(validation),
+                              p=0,d=1,q=1,P=1,D=1,Q=0,S=10)
+```
+
+#### Backtransform
+
+We now have test values expressed as sequential percent differences.
+To evaluate our model, we need to backtransform the data to the original stillbirth rate:
+
+- dived by 100 (to remove percent)
+- multiply by the original validation data shifted backwards by 1 (sequential differences): we obtain the vector of sequential differences
+- now sum the original validation data (shifted backwards by 1) and you'll have the original validation data
+
+```{r}
+## validation is from year 200
+valid_orig = filter(temp, year >= 1999) |> pull(sbr_swe)
+d = (validation/100)*valid_orig[-length(valid_orig)] ## vector of sequential differences
+d + valid_orig[-length(valid_orig)]
+```
+
+This was easy (actually, we already had the original validation data, this was mainly a sanity check test).
+We need to do the same thing for the model predictions, to bring them on the same scale as the original stillbirth rate.
+
+
+```{r}
+d = (sarima_forecast$pred/100)*valid_orig[-length(valid_orig)]
+backtransformed_pred = d + valid_orig[-length(valid_orig)]
+```
+
+We can now calculate the mean absolute percentage error:
+
+```{r}
+MAPE(backtransformed_pred, valid_orig[-1]) * 100
+```
+
+
+```{r}
+plot(temp, col="blue", xlab="Year", ylab="Stillbirth", main="SARIMA Forecast", type='l')
+lines(ts(backtransformed_pred, start = 2000, frequency = 1), col="red", lwd=3)
+```
+
+
+**Q: would normalization improve predictions with the naive method? Try it!**
+
+```{r}
+## your code here!
+```
+
