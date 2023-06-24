@@ -1,12 +1,13 @@
 ---
 title: "mixed_models"
-author: "Filippo"
+author: "Filippo Biscarini"
 date: "2023-06-08"
 output: html_document
 ---
 
 ```{r setup, include=FALSE}
 library("DT")
+library("car")
 library("broom")
 library("knitr")
 library("ggpubr")
@@ -110,7 +111,7 @@ ggplot(cows_reduced, aes(date, milk, color = factor(NID))) +
   geom_line() +
   facet_wrap(~ NID) +
   labs(x = "Test day", y = "Milk kg/d", color = "Cow id") +
-  theme(legend.position = "none")
+  theme(legend.position = "none", axis.text.x = element_text(angle=90))
 ```
 
 By herd:
@@ -278,6 +279,32 @@ sqrt(sum((train$milk-train$pred)^2)/nrow(train)) ## RMSE
 
 ### Residuals and model diagnostics
 
+#### 1. Linearity
+
+ - linearity between $y$ and the predictors $X$
+ - we expect that there is no significant trend in the residuals $\epsilon$ with respect to the fitted value $\hat{y}$ or any predictor
+ 
+```{r}
+df <- data.frame("fitted" = results$fitted, "residuals" = results$residuals, "parity" = train$parity)
+ggplot(df, aes(x = fitted, y = residuals)) + geom_point() + geom_smooth(se = FALSE, method = "loess")
+```
+
+```{r}
+ggplot(df, aes(x = parity, y = residuals)) + geom_jitter(aes(color=parity))
+```
+
+#### 2. Normality
+
+ - assumed normality of the residuals 
+ - the central limit theorem will make $\hat{\beta}$ asymptotically normal (the linear model is robust to departures from normality)
+
+We expect the residuals to follow the normal distribution $\rightarrow$ QQ-plot
+
+```{r}
+norm_res = (results$residuals-mean(results$residuals))/(sd(results$residuals))
+qqPlot(norm_res)
+```
+
 ```{r}
 summary(results$residuals)
 ```
@@ -286,6 +313,50 @@ summary(results$residuals)
 hist(results$residuals, breaks = 25)
 ```
 
+#### 3. Homoskedasticity
+
+- assumption of constant-variance of the errors
+
+Heteroskedasticity can be detected by looking at patterns in the residuals vs. fitted values plot:  
+scale-location plot, where the standardized residuals are transformed by a square root of its absolute value, and inspect the deviations in the positive axis.
+
+```{r}
+df$sqrt_res = sqrt(abs(norm_res))
+ggplot(df, aes(x = fitted, y = sqrt_res)) + geom_point() + geom_smooth(se = FALSE, method = "loess")
+```
+
+#### 4. Independence
+
+- independence of records: usual assumption in linear models
+
+Here, we already knew that observations were not independent (multiple records from the same cow), and we accounted for this in the model (**repeatability model**).
+
+We can look for the presence of autocorrelation, which appears when there is some kind of serial dependence in the measurement of observations. 
+The serial plot of the residuals allows to detect time trends in them:
+
+```{r}
+plot(results$residuals, type="o")
+```
+
+We don't see any trends pointing to autocorrelation of the data (remember, we already used a model that accounted for dependence in the data!)
+The serial plot of residuals would allow to spot positive autocorrelation (upward or downward trend); 
+negative autocorrelation (alternating small-large or positive-negative residuals) is also possible: the lag-plot can visually check for it, we expect no trends in such plot.
+
+```{r}
+lag.plot(results$residuals, lags = 1, do.lines = FALSE)
+```
+
+#### 5. Additional diagnostics
+
+- multicollinearity (correlations between predictors ($x$'s))
+- outliers (extreme $y$'s)
+- high-leverage points (extreme predictors $x$'s)
+
+The `plot()` of the fitted model provides a combined summary of diagnostics plots:
+
+```{r}
+plot(results)
+```
 
 ## Exercise: can you improve the model?
 
