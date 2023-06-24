@@ -306,7 +306,6 @@ Pick another target variable and apply the within-timepoint linear regression an
 ## your code here!
 ```
 
-
 ### Across-timepoint analysis
 
 We now use a more complex model of analysis, which uses all the data at once and includes both the effect of timepoint and the effect of treatment:
@@ -329,19 +328,21 @@ summary(fit)
 
 The output above shows:
 
-- overall $R^2$ of the model
-- overall p-value of the model
-- estimates of single coefficients (with respect to the reference class)
-- p-values for the single coefficients (under the null hypothesis that they're equal to zero)
+-   overall $R^2$ of the model
+-   overall p-value of the model
+-   estimates of single coefficients (with respect to the reference class)
+-   p-values for the single coefficients (under the null hypothesis that they're equal to zero)
+
+**Q: how do we interpret the model coefficients?**
 
 We can look also at the global contribution of the two effects included in the model (not the levels of such effects):
 
 ```{r}
+
 anova(fit)
 ```
 
-Specific contrasts between levels of the categorical explanatory variables can be obtained with a number of ways.
-E.g., buy using the `TukeyHSD()` function (e.g. [here](https://en.wikipedia.org/wiki/Tukey%27s_range_test)) which requires an `aov` object:
+Specific contrasts between levels of the categorical explanatory variables can be obtained with a number of ways. E.g., buy using the `TukeyHSD()` function (e.g. [here](https://en.wikipedia.org/wiki/Tukey%27s_range_test)) which requires an `aov` object:
 
 ```{r}
 res.aov = aov(value ~ Week + Treatment, data = school_time)
@@ -377,4 +378,11 @@ fit = lm(value ~ Week + Treatment + Week:Treatment, data=school_time)
 summary(fit)
 ```
 
+```{r}
+
+anova(fit)
+```
+
+**Q: is the additivity assumption valid?**
+**Q: has model fit improved with the interaction term?**
 **Q: how do we interpret the interaction terms?**
