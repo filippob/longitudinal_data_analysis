@@ -46,3 +46,5 @@ As a general rule, we'll have a longer break (30 minutes) at 16:00 and two short
     - [7.2.forecasting.Rmd](day_2/7.2.forecasting.Rmd)
     - [7.3.time_series_with_tidymodels.Rmd](day_2/7.3.time_series_with_tidymodels.Rmd)
  
+**Day 3**
+ 
