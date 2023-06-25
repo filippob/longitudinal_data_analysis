@@ -54,4 +54,6 @@ As a general rule, we'll have a longer break (30 minutes) at 16:00 and two short
        -Day3_analysis.Rmd
  - Lab 9: Testing for the effects of variables in R
  - Lab 10: Group effect and Interaction between time and group in R
- - Lab 11: Parametric curves and prediction of random effects in R  
+ - Lab 11: Parametric curves and prediction of random effects in R
+
+ - Lecture 9: Model diagnostics  
