@@ -79,7 +79,11 @@ p
 
 From reading the article, we expect the treatment to have an effect a little time after the application of gentamycin (vs control/sham) and then to see restoration when the cells of the lateral line system are regenerated.
 
+------------------------------------------------------------------------
+
 **Q: which target variables better show this expected pattern?**
+
+------------------------------------------------------------------------
 
 ### Pick target variable
 
@@ -298,6 +302,8 @@ datatable(results) |>
 )
 ```
 
+------------------------------------------------------------------------
+
 ### Exercise
 
 Pick another target variable and apply the within-timepoint linear regression analysis:
@@ -305,6 +311,8 @@ Pick another target variable and apply the within-timepoint linear regression an
 ```{r}
 ## your code here!
 ```
+
+------------------------------------------------------------------------
 
 ### Across-timepoint analysis
 
@@ -333,7 +341,11 @@ The output above shows:
 -   estimates of single coefficients (with respect to the reference class)
 -   p-values for the single coefficients (under the null hypothesis that they're equal to zero)
 
+------------------------------------------------------------------------
+
 **Q: how do we interpret the model coefficients?**
+
+------------------------------------------------------------------------
 
 We can look also at the global contribution of the two effects included in the model (not the levels of such effects):
 
@@ -383,6 +395,8 @@ summary(fit)
 anova(fit)
 ```
 
-**Q: is the additivity assumption valid?**
-**Q: has model fit improved with the interaction term?**
-**Q: how do we interpret the interaction terms?**
+------------------------------------------------------------------------
+
+**Q: is the additivity assumption valid?** **Q: has model fit improved with the interaction term?** **Q: how do we interpret the interaction terms?**
+
+------------------------------------------------------------------------

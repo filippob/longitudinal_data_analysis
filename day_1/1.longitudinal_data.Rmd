@@ -17,10 +17,6 @@ knitr::opts_chunk$set(echo = TRUE)
 
 In this R notebook we will get introduced to examples of longitudinal data, i.e. data with a **time component**:
 
-$$
-y = \mu + \beta_1 \text{time} + \beta_2 \text{treatment} + e
-$$
-
 ## Read data
 
 Data from [Spatiotemporally explicit model averaging for forecasting of Alaskan groundfish catch](https://onlinelibrary.wiley.com/doi/10.1002/ece3.4488) (data repo [here](https://zenodo.org/record/4987796#.ZHcLL9JBxhE))
