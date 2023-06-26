@@ -165,6 +165,8 @@ p
 
 **Q: Do we have a trend?**
 
+---
+
 What about the standard deviation? Let's see if we have a trend there (!! remember, we introduced artificial random variation, no trend is actually expected, safe by chance !!):
 
 ```{r}
@@ -188,16 +190,22 @@ p <- p + facet_wrap(~Species)
 p
 ```
 
----
+------------------------------------------------------------------------
 
 **Q: What do you notice?**
 
+---
+
 ### Model-based adjustments
+
+We can use a model to adjust phenotypes by known sources of variation:
 
 ```{r}
 mod <- lm(rescaled_cpue ~ SST_cvW+SST_cvW1+SST_cvW2+SST_cvW3+SST_cvW4+SST_cvW5, data = fish)
 summary(mod)
 ```
+
+We then **focus on model residuals**:
 
 ```{r}
 hist(residuals(mod))
@@ -207,6 +215,8 @@ hist(residuals(mod))
 fish$residuals <- residuals(mod)
 fish$fitted_values <- fitted(mod)
 ```
+
+We can now use average residuals to calculate and visualize trend lines per group:
 
 ```{r}
 dd <- fish |>
@@ -229,37 +239,9 @@ p <- p + facet_wrap(~Species)
 p
 ```
 
-## Exercise
-
-Data from the article "[Age-dependent trait variation: the relative contribution of within-individual change, selective appearance and disappearance in a long-lived seabird](https://besjournals.onlinelibrary.wiley.com/doi/10.1111/1365-2656.12321)" (data repo [here](https://zenodo.org/record/5010983))
-
-```{r read-the-cow-data}
-basefolder = "/home/filippo/Dropbox/cursos/longitudinal_data_analysis"
-inpfile = "data/seabird/data_traits.xlsx"
-fname = file.path(basefolder, inpfile)
-
-seabirds = readxl::read_xlsx(fname)
-```
-
-1.  Within populations, the expression of phenotypic traits typically varies with age. Such age-dependent trait variation can be caused by within-individual change (improvement, senescence, terminal effects) and/or selective (dis)appearance of certain phenotypes among older age classes.
-
-2.  within-individual change and selective (dis)appearance, in a long-lived seabird, the common tern (*Sterna hirundo*).
-
-3.  At the population level, all traits, except the probability to breed, improved with age (i.e., phenology advanced and reproductive output increased). Both methods identified within-individual change as the main responsible process, and within individuals, performance improved until age 6-13, before levelling off. In contrast, within individuals, breeding probability decreased to age 10, then levelled off.
-
-OPTIONS: - look at males vs females across time - look at males vs females in two/three groups: young, intermediate, old birds
-
-Target variables can be: laying date or egg volume (approximately continuous variables)
-
-```{r}
-## your code here
-```
-
 ### Baseline adjustment
 
-An approach which is often used with temporal data is to express group trends as differences from a reference time point.
-This is often used in econometrics, e.g. to show variation in GDP in different countries from a starting year.
-Also in medicine this approach is often used, and is usually referred to as **baseline adjustment** (for data-viz and EDA; model-based adjustments have been mentioned earlier).
+An approach which is often used with temporal data is to express group trends as differences from a reference time point. This is often used in econometrics, e.g. to show variation in GDP in different countries from a starting year. Also in medicine this approach is often used, and is usually referred to as **baseline adjustment** (for data-viz and EDA; model-based adjustments have been mentioned earlier).
 
 We start with identifying the reference timepoint: 1990 is the initial year for the entire dataset.
 
@@ -274,7 +256,6 @@ fish |>
 ```
 
 Since we have multiple values per group at baseline (multiple records per Species, Area and Year), we need to take **averages**:
-
 
 ```{r}
 fish_bsl <- fish |>
@@ -321,3 +302,28 @@ p <- p + facet_wrap(~Species)
 p
 ```
 
+## Exercise
+
+Data from the article "[Age-dependent trait variation: the relative contribution of within-individual change, selective appearance and disappearance in a long-lived seabird](https://besjournals.onlinelibrary.wiley.com/doi/10.1111/1365-2656.12321)" (data repo [here](https://zenodo.org/record/5010983))
+
+```{r read-the-cow-data}
+basefolder = "/home/filippo/Dropbox/cursos/longitudinal_data_analysis"
+inpfile = "data/seabird/data_traits.xlsx"
+fname = file.path(basefolder, inpfile)
+
+seabirds = readxl::read_xlsx(fname)
+```
+
+1.  Within populations, the expression of phenotypic traits typically varies with age. Such age-dependent trait variation can be caused by within-individual change (improvement, senescence, terminal effects) and/or selective (dis)appearance of certain phenotypes among older age classes.
+
+2.  within-individual change and selective (dis)appearance, in a long-lived seabird, the common tern (*Sterna hirundo*).
+
+3.  At the population level, all traits, except the probability to breed, improved with age (i.e., phenology advanced and reproductive output increased). Both methods identified within-individual change as the main responsible process, and within individuals, performance improved until age 6-13, before levelling off. In contrast, within individuals, breeding probability decreased to age 10, then levelled off.
+
+OPTIONS: - look at males vs females across time - look at males vs females in two/three groups: young, intermediate, old birds
+
+Target variables can be: laying date or egg volume (approximately continuous variables)
+
+```{r}
+## your code here
+```
