@@ -95,7 +95,7 @@ MAPE(ets_forecast$mean, validation) *100
 ```
 
 ```{r}
-plot(AirPassengers, col="blue", xlab="Year", ylab="Passengers", main="Exponential smoothing", type='l')
+plot(AirPassengers, col="blue", xlab="Year", ylab="Passengers", main="Exponential smoothing - additive model", type='l')
 lines(ets_forecast$mean, col="red", lwd=2)
 ```
 
@@ -127,7 +127,7 @@ MAPE(dshw_model$mean, validation)*100
 ```
 
 ```{r}
-plot(AirPassengers, col="blue", xlab="Year", ylab="Passengers", main="Seasonal Naive Forecast", type='l')
+plot(AirPassengers, col="blue", xlab="Year", ylab="Passengers", main="Holt-Winters method", type='l')
 lines(dshw_model$mean, col="red", lwd=2)
 ```
 
@@ -146,7 +146,7 @@ MAPE(tbats_forecast$mean, validation) * 100
 ```
 
 ```{r}
-plot(AirPassengers, col="blue", xlab="Year", ylab="Passengers", main="Seasonal Naive Forecast", type='l')
+plot(AirPassengers, col="blue", xlab="Year", ylab="Passengers", main="TBATS", type='l')
 lines(tbats_forecast$mean, col="red", lwd=2)
 ```
 
@@ -170,7 +170,7 @@ MAPE(sarima_forecast$pred, validation) * 100
 ```
 
 ```{r}
-plot(AirPassengers, col="blue", xlab="Year", ylab="Passengers", main="Seasonal Naive Forecast", type='l')
+plot(AirPassengers, col="blue", xlab="Year", ylab="Passengers", main="SARIMA", type='l')
 lines(sarima_forecast$pred, col="red", lwd=2)
 ```
 

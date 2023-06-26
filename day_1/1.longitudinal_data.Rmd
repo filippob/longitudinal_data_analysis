@@ -23,8 +23,7 @@ $$
 
 ## Read data
 
-Data from [Spatiotemporally explicit model averaging for forecasting of Alaskan groundfish catch](https://onlinelibrary.wiley.com/doi/10.1002/ece3.4488)
-(data repo [here](https://zenodo.org/record/4987796#.ZHcLL9JBxhE))
+Data from [Spatiotemporally explicit model averaging for forecasting of Alaskan groundfish catch](https://onlinelibrary.wiley.com/doi/10.1002/ece3.4488) (data repo [here](https://zenodo.org/record/4987796#.ZHcLL9JBxhE))
 
 It's data on fish catch (multiple fish species) over time in different regions of Alaska.
 
@@ -139,8 +138,8 @@ temp <- dd |>
 
 Now the variable `Year` is a `factor`; we need to take this into account when making the plot:
 
-- `group`: we have only one observation for group (Species, Area, Year), so we must specify the grouping variable, in this case `Area`
-- year is not a number now, and this is reflected in the x axis: no intervals, all values are plotted (so we can for example place them vertically and make them smaller, to avoid overlap)
+-   `group`: we have only one observation for group (Species, Area, Year), so we must specify the grouping variable, in this case `Area`
+-   year is not a number now, and this is reflected in the x axis: no intervals, all values are plotted (so we can for example place them vertically and make them smaller, to avoid overlap)
 
 ```{r}
 p <- ggplot(temp, aes(Year, CPUE)) + geom_line(aes(color = Area, group = Area))
@@ -156,17 +155,17 @@ temp <- dd |>
   mutate(Year = as.numeric(Year))
 ```
 
-
 ```{r}
 p <- ggplot(temp, aes(Year, CPUE)) + geom_line(aes(color = Area))
 p <- p + facet_wrap(~Species)
 p
 ```
 
+------------------------------------------------------------------------
+
 **Q: Do we have a trend?**
 
 What about the standard deviation? Let's see if we have a trend there (!! remember, we introduced artificial random variation, no trend is actually expected, safe by chance !!):
-
 
 ```{r}
 dd <- fish |>
@@ -177,19 +176,19 @@ dd <- fish |>
 print(dd)
 ```
 
-
 ```{r}
 temp <- dd |> 
   gather(key = "Year", value = "sd(CPUE)", -c(Species, Area)) |>
   mutate(Year = as.numeric(Year))
 ```
 
-
 ```{r}
 p <- ggplot(temp, aes(Year, `sd(CPUE)`)) + geom_line(aes(color = Area))
 p <- p + facet_wrap(~Species)
 p
 ```
+
+---
 
 **Q: What do you notice?**
 
@@ -209,7 +208,6 @@ fish$residuals <- residuals(mod)
 fish$fitted_values <- fitted(mod)
 ```
 
-
 ```{r}
 dd <- fish |>
   group_by(Species, Area, Year) |>
@@ -225,7 +223,6 @@ temp <- dd |>
   mutate(Year = as.numeric(Year))
 ```
 
-
 ```{r}
 p <- ggplot(temp, aes(Year, CPUE)) + geom_line(aes(color = Area))
 p <- p + facet_wrap(~Species)
@@ -234,8 +231,7 @@ p
 
 ## Exercise
 
-Data from the article "[Age-dependent trait variation: the relative contribution of within-individual change, selective appearance and disappearance in a long-lived seabird](https://besjournals.onlinelibrary.wiley.com/doi/10.1111/1365-2656.12321)"
-(data repo [here](https://zenodo.org/record/5010983))
+Data from the article "[Age-dependent trait variation: the relative contribution of within-individual change, selective appearance and disappearance in a long-lived seabird](https://besjournals.onlinelibrary.wiley.com/doi/10.1111/1365-2656.12321)" (data repo [here](https://zenodo.org/record/5010983))
 
 ```{r read-the-cow-data}
 basefolder = "/home/filippo/Dropbox/cursos/longitudinal_data_analysis"
@@ -245,15 +241,13 @@ fname = file.path(basefolder, inpfile)
 seabirds = readxl::read_xlsx(fname)
 ```
 
-1. Within populations, the expression of phenotypic traits typically varies with age. Such age-dependent trait variation can be caused by within-individual change (improvement, senescence, terminal effects) and/or selective (dis)appearance of certain phenotypes among older age classes. 
+1.  Within populations, the expression of phenotypic traits typically varies with age. Such age-dependent trait variation can be caused by within-individual change (improvement, senescence, terminal effects) and/or selective (dis)appearance of certain phenotypes among older age classes.
 
-2. within-individual change and selective (dis)appearance, in a long-lived seabird, the common tern (*Sterna hirundo*). 
+2.  within-individual change and selective (dis)appearance, in a long-lived seabird, the common tern (*Sterna hirundo*).
 
-3. At the population level, all traits, except the probability to breed, improved with age (i.e., phenology advanced and reproductive output increased). Both methods identified within-individual change as the main responsible process, and within individuals, performance improved until age 6-13, before levelling off. In contrast, within individuals, breeding probability decreased to age 10, then levelled off. 
+3.  At the population level, all traits, except the probability to breed, improved with age (i.e., phenology advanced and reproductive output increased). Both methods identified within-individual change as the main responsible process, and within individuals, performance improved until age 6-13, before levelling off. In contrast, within individuals, breeding probability decreased to age 10, then levelled off.
 
-OPTIONS:
-- look at males vs females across time
-- look at males vs females in two/three groups: young, intermediate, old birds
+OPTIONS: - look at males vs females across time - look at males vs females in two/three groups: young, intermediate, old birds
 
 Target variables can be: laying date or egg volume (approximately continuous variables)
 
@@ -261,8 +255,69 @@ Target variables can be: laying date or egg volume (approximately continuous var
 ## your code here
 ```
 
+### Baseline adjustment
+
+An approach which is often used with temporal data is to express group trends as differences from a reference time point.
+This is often used in econometrics, e.g. to show variation in GDP in different countries from a starting year.
+Also in medicine this approach is often used, and is usually referred to as **baseline adjustment** (for data-viz and EDA; model-based adjustments have been mentioned earlier).
+
+We start with identifying the reference timepoint: 1990 is the initial year for the entire dataset.
+
+```{r}
+min(fish$Year)
+```
+
+```{r}
+fish |>
+  group_by(Species, Area) |>
+  summarise(min(Year))
+```
+
+Since we have multiple values per group at baseline (multiple records per Species, Area and Year), we need to take **averages**:
 
 
+```{r}
+fish_bsl <- fish |>
+  filter(Year == 1990) |>
+  group_by(Species, Area) |>
+  mutate(bsl = mean(rescaled_cpue)) |>
+  ungroup() |>
+  select(Year,Area,Species,bsl) |>
+  unique()
+```
 
+The average values at baseline are then subtracted from the target variable by "group" (Species and Area in this example):
 
+```{r}
+fish_chg <- fish |>
+  left_join(fish_bsl, by = c("Year","Species","Area")) |>
+  arrange(Species, Area, Year) |>
+  group_by(Species, Area) |>
+  mutate(chg = rescaled_cpue - bsl[1L]) |>
+  ungroup()
+
+```
+
+Now we have the data ready to visualize trends expressed as differences from baseline:
+
+```{r eda}
+dd <- fish_chg |>
+  group_by(Species, Area, Year) |>
+  summarise(avg = round(mean(chg),2)) |>
+  spread(key = Year, value = avg)
+
+print(dd)
+```
+
+```{r}
+temp <- dd |> 
+  gather(key = "Year", value = "CPUE", -c(Species, Area)) |>
+  mutate(Year = as.numeric(Year))
+```
+
+```{r}
+p <- ggplot(temp, aes(Year, CPUE)) + geom_line(aes(color = Area))
+p <- p + facet_wrap(~Species)
+p
+```
 
