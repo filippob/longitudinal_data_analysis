@@ -330,7 +330,7 @@ school_time$Treatment <- factor(school_time$Treatment, levels = c("Sham", "Genta
 ```
 
 ```{r}
-fit = lm(value ~ Week + Treatment, data = school_time)
+fit = lm(value ~ Treatment + Week, data = school_time)
 summary(fit)
 ```
 
@@ -350,7 +350,6 @@ The output above shows:
 We can look also at the global contribution of the two effects included in the model (not the levels of such effects):
 
 ```{r}
-
 anova(fit)
 ```
 
@@ -389,6 +388,30 @@ $$
 fit = lm(value ~ Week + Treatment + Week:Treatment, data=school_time)
 summary(fit)
 ```
+
+β3 is the difference in the effect of protein on muscle mass between those who exercise and those who do not. Or vice-versa, it is the difference in the effect of exercise on muscle mass between those who take protein supplements and those who don’t
+
+- `Week0`: average `Time in School` at Week 0 vs Week -1, irrespective of treatment and interaction
+- `Gentamycin`: average `Time in School` of treated fish, irrespective of time and interaction
+- `Week0:Gentamycin`: average difference in the effect of `Gentamycin` on `Time in School` between `Week0` and `Week -1`
+
+Fish at week 1, treated with gentamycin
+
+$$
+98.6 + (-16.12) + (0.5875) + (-28.4675) = 54.6
+$$
+
+From the across-timepoints model:
+
+$$
+104.862 + (-15.46) + (-27.902) = 61.5
+$$
+
+```{r}
+98.6 + (-16.12) + (0.5875) + (-28.4675)
+```
+
+Raw average $y$ at week 1 for treated fish = **54.6** !
 
 ```{r}
 
