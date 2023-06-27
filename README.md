@@ -32,7 +32,7 @@ As a general rule, we'll have a longer break (30 minutes) at about 17:00 and two
 **Day 2**
 
 - Lab 4: diff-in-diff in R
-    - [4.diff-in-diff.Rmd](4.diff-in-diff.Rmd)
+    - [4.diff-in-diff.Rmd](day_2/4.diff-in-diff.Rmd)
 - Lecture 5: Censored data and survival analysis
 - Lab 5: Survival analysis in R
     - [5.survival_analysis.Rmd](day_2/5.survival_analysis.Rmd)
