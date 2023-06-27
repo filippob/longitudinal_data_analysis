@@ -3,6 +3,9 @@ title: "Time series and autocorrelations"
 author: "Filippo Biscarini"
 date: "2023-06-22"
 output: html_document
+editor_options: 
+  markdown: 
+    wrap: sentence
 ---
 
 ```{r setup, include=FALSE}
@@ -22,10 +25,9 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Time series
 
-A time series is a list of numbers ordered by time. 
+A time series is a list of numbers ordered by time.
 Time series-like objects can be also other types of ordered data: e.g. spatial series (geographical proximity), genome sequences (e.g. adjacent loci/nucelotides).
 More generally, these data are known as **sequence data** (text, sounds are other types of sequence data).
-
 
 In R, time series data can be stored as a `ts` object.
 
@@ -40,14 +42,11 @@ class(co2)
 co2
 ```
 
-
 ```{r}
 autoplot(co2) + ggtitle("Monthly atmospheric CO2 concentration in Manua Loa")
 ```
 
-```{r}
-autoplot(ts(co2, start=1980)) + ggtitle("Monthly atmospheric CO2 concentration in Manua Loa")
-```
+Convert time series object to dataframe:
 
 ```{r}
 co2_df = data.frame("CO2" = co2)
@@ -82,9 +81,10 @@ ggsubseriesplot(co2) +
   ggtitle("Subseries plot: monthly CO2 concentration in the atmosphere over the 1959-1997 period")
 ```
 
-The horizontal lines indicate the means for each month. This plot highlights the underlying seasonal pattern to be seen clearly, and also shows the changes in seasonality over time.
+The horizontal lines indicate the means for each month.
+This plot highlights the underlying seasonal pattern to be seen clearly, and also shows the changes in seasonality over time.
 
-Now we use data from two paired time series: electricity demand (Gigawatts) and temeprature (Celsius degrees) from Victoria (Australia) in 2014:
+Now we use data from two paired time series: electricity demand (Gigawatts) and temperature (Celsius degrees) from Victoria (Australia) in 2014:
 
 ```{r}
 data(elecdemand) ## from fpp2
@@ -104,7 +104,6 @@ df <- as.data.frame(elecdemand)
 ggplot(df, aes(Temperature, Demand)) + geom_point()
 ```
 
-
 ```{r}
 co2x <- window(co2, start=1980)
 gglagplot(co2x, lags = 6)
@@ -112,7 +111,7 @@ gglagplot(co2x, lags = 6)
 
 #### European stillbirth data
 
-European Stillbirth Rate Time Series Dataset (data repo at: https://zenodo.org/record/6505519)
+European Stillbirth Rate Time Series Dataset (data repo at: <https://zenodo.org/record/6505519>)
 
 ```{r read-stillbirth-data}
 basefolder = "/home/filippo/Dropbox/cursos/longitudinal_data_analysis/longitudinal_data_analysis"
@@ -134,12 +133,11 @@ autoplot(temp)
 GGally::ggpairs(as.data.frame(temp[,-3]))
 ```
 
-
 ## Autocorrelations
 
-Autocorrelation is used to measure the degree of similarity between a time series and a lagged version of itself over the given range of time intervals. 
-We can also call autocorrelation as *serial correlation* or *lagged correlation*. 
-It is mainly used to measure the relationship between the actual values and the previous values.
+Autocorrelation is used to measure the degree of similarity between a time series and a lagged version of itself over the given range of time intervals.
+We can also call autocorrelation as *serial correlation* or *lagged correlation*.
+It is mainly used to measure the relationship between the current values and the previous values.
 
 $$
 r_k = \frac{\sum_{t=k+1}^T (y_t-\bar{y})(y_{t-k}-\bar{y})}{\sum_{t=1}^T(y_t-\bar{y})^2}
@@ -150,13 +148,12 @@ v = c(12,34,56,30,23,15,28,36,45,31,21,10,29,40,58,64,78,90)
 plot(v)
 ```
 
-
 With lag = 0, the autocorrelation is clearly $1$: $\frac{\sum (y_t-\bar{y}) \cdot (y_t-\bar{y})}{\sum (y_t-\bar{y})^2}$.
 
 With lag = $1$, we calculate the correlation between the two vectors ($n$ is the length of the vector):
 
-- v[2,n]
-- v[1,n-1]
+-   v[2,n]
+-   v[1,n-1]
 
 ```{r}
 n = length(v)
@@ -175,12 +172,10 @@ print(r1)
 ## your code here!!
 ```
 
-
-
 The `acf()` function from the `stats` package:
 
-- input vector (time series or spatial series etc.)
-- lag
+-   input vector (time series or spatial series etc.)
+-   lag
 
 ```{r}
 acf(v, plot = FALSE)
@@ -191,11 +186,11 @@ forecast::ggAcf(ts(v))
 ```
 
 ```{r}
-acf(co2, lag = 3, plot = FALSE)
+acf(co2, lag = 2, plot = FALSE)
 ```
 
 ```{r}
-acf(co2, lag.max = 8, plot = FALSE)
+acf(co2, lag.max = 6, plot = FALSE)
 ```
 
 ```{r}
@@ -207,6 +202,7 @@ time(elecdemand)[17000]
 elecdemand2 <- window(elecdemand, start = 2014.95)
 ggAcf(elecdemand2[,"Demand"])
 ```
+
 ```{r}
 ggAcf(elecdemand2[,"Temperature"])
 ```
@@ -217,7 +213,8 @@ ggAcf(temp[,7])
 
 ### White noise time series
 
-Time series that show no autocorrelation are called white noise. Figure 2.17 gives an example of a white noise series.
+Time series that show no autocorrelation are called white noise.
+Figure 2.17 gives an example of a white noise series.
 
 ```{r}
 y <- ts(rnorm(50))
@@ -228,16 +225,18 @@ autoplot(y) + ggtitle("White noise")
 ggAcf(y)
 ```
 
-For **white noise series**, we expect each autocorrelation to be close to zero. 
-Of course, they will not be exactly equal to zero as there is random variation. 
-For a white noise series, we expect $95\%$ of the spikes in the autocorrelation plot to lie within  
-$ \pm \frac{2}{\sqrt{T}}$ where $T$ is the length of the time series. 
+For **white noise series**, we expect each autocorrelation to be close to zero.
+Of course, they will not be exactly equal to zero as there is random variation.
+For a white noise series, we expect $95\%$ of the spikes in the autocorrelation plot to lie within:
 
-It is common to plot these bounds on the graph (the blue dashed lines above). 
+$$ 
+\pm \frac{2}{\sqrt{T}} 
+$$
+
+where $T$ is the length of the time series.
+
+It is common to plot these bounds on the graph (the blue dashed lines above).
 If one or more large spikes are outside these bounds, or if substantially more than 5% of spikes are outside these bounds, then the series is probably not white noise.
 
-In this white noise series, $T = 50$ and so the bounds are at $\pm \frac{2}{\sqrt{50}}= \pm 0.28$. 
+In this white noise series, $T = 50$ and so the bounds are at $\pm \frac{2}{\sqrt{50}}= \pm 0.28$.
 All of the autocorrelation coefficients lie within these limits, confirming that the data are white noise.
-
- 
- 

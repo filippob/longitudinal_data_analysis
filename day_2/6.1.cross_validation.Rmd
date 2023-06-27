@@ -5,7 +5,6 @@ date: "2023-06-21"
 output: html_document
 ---
 
-
 ```{r setup, include=FALSE}
 library("knitr")
 library("xgboost")
@@ -16,13 +15,11 @@ library("tidymodels")
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-We introduce here resampling and cross-validation for predictive models in R.
-A random cross-validation approach is used.
+We introduce here resampling and cross-validation for predictive models in R. A random cross-validation approach is used.
 
 ## Read data
 
-Data from [Spatiotemporally explicit model averaging for forecasting of Alaskan groundfish catch](https://onlinelibrary.wiley.com/doi/10.1002/ece3.4488)
-(data repo [here](https://zenodo.org/record/4987796#.ZHcLL9JBxhE))
+Data from [Spatiotemporally explicit model averaging for forecasting of Alaskan groundfish catch](https://onlinelibrary.wiley.com/doi/10.1002/ece3.4488) (data repo [here](https://zenodo.org/record/4987796#.ZHcLL9JBxhE))
 
 It's data on fish catch (multiple fish species) over time in different regions of Alaska.
 
@@ -41,8 +38,8 @@ fish = fread(fname)
 
 ### Data preprocessing
 
-- `V1` is record ID
-- `Station` indicates the fishing station
+-   `V1` is record ID
+-   `Station` indicates the fishing station
 
 We will not consider these variables in the predictive model: remove here, or use `tidymodels` `roles`?
 
@@ -61,10 +58,10 @@ fish <- fish |>
 ```
 
 ```{r}
+
 temp <- fish |>
   select(-c(V1,Station,avg,std,noise))
 ```
-
 
 ## Data splitting
 
@@ -77,7 +74,6 @@ splits      <- initial_split(temp, prop = 0.8)
 fish_train <- training(splits)
 fish_test  <- testing(splits)
 ```
-
 
 ### 2. Define the model
 
@@ -212,7 +208,7 @@ res <- assess_res |>
 print(res)
 ```
 
-And the average accuracy (Pearson correlation) and NRMSE over the 10 cross-validation replicates: 
+And the average accuracy (Pearson correlation) and NRMSE over the 10 cross-validation replicates:
 
 ```{r}
 mean(res$accuracy)
@@ -221,4 +217,3 @@ mean(res$accuracy)
 ```{r}
 mean(res$NRMSE)
 ```
-

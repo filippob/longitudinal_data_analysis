@@ -3,6 +3,9 @@ title: "Forecasting"
 author: "Filippo Biscarini"
 date: "2023-06-22"
 output: html_document
+editor_options: 
+  markdown: 
+    wrap: 72
 ---
 
 ```{r setup, include=FALSE}
@@ -16,13 +19,14 @@ knitr::opts_chunk$set(echo = TRUE)
 
 We want to forecast future observations based on past observations:
 
-- Naive methods
-- Exponential Smoothing models
-- BATS and TBATS
-- ARIMA/SARIMA models
-- How to set up a one-step-ahead forecast
+-   Naive methods
+-   Exponential Smoothing models
+-   BATS and TBATS
+-   ARIMA/SARIMA models
+-   How to set up a one-step-ahead forecast
 
-We use a dataset of monthly totals (1000s) of international airline passengers between 1949 and 1960:
+We use a dataset of monthly totals (1000s) of international airline
+passengers between 1949 and 1960:
 
 ```{r airpassengers}
 data(AirPassengers)
@@ -35,14 +39,16 @@ validation = window(AirPassengers, start = c(1957,1))
 
 ## 1. Naive Methods
 
-Any forecasting method should be evaluated by being compared to a naive method. 
-This helps ensure that the efforts put in having a more complex model are worth it in terms of performance.
+Any forecasting method should be evaluated by being compared to a naive
+method. This helps ensure that the efforts put in having a more complex
+model are worth it in terms of performance.
 
-The simplest of all methods is called simple naive. 
-Extremely simple: the forecast for tomorrow is what we are observing today.
+The simplest of all methods is called simple naive. Extremely simple:
+the forecast for tomorrow is what we are observing today.
 
-Another approach, seasonal naive, is a little more "complex": the forecast for tomorrow 
-is what we observed the week/month/year (depending what horizon we are working with) before.
+Another approach, seasonal naive, is a little more "complex": the
+forecast for tomorrow is what we observed the week/month/year (depending
+what horizon we are working with) before.
 
 Here is how to do a seasonal naive forecast:
 
@@ -58,31 +64,33 @@ plot(AirPassengers, col="blue", xlab="Year", ylab="Passengers", main="Seasonal N
 lines(naive$mean, col="red", lwd=2)
 ```
 
-what happened in the last year of data is repeated as a forecast for the entire validation set
+what happened in the last year of data is repeated as a forecast for the
+entire validation set
 
 ## 2. Exponential Smoothing
 
-In exponential smoothing we give a declining weight to observations: the more recent an observation, the more importance it will have in our forecast.
+In exponential smoothing we give a declining weight to observations: the
+more recent an observation, the more importance it will have in our
+forecast.
 
-Parameters can also be added. You can for instance add a trend parameter (**Holt method**) 
-or add a seasonality (**Holt-Winters**).
+Parameters can also be added. You can for instance add a trend parameter
+(**Holt method**) or add a seasonality (**Holt-Winters**).
 
 ### Holt method
 
-Function `forecast::ets()`.
-The model (additive or multiplicative) is chosen automatically if not specified:
+Function `forecast::ets()`. The model (additive or multiplicative) is
+chosen automatically if not specified:
 
 $$
 y_t = f(S_t, T_t, E_t)
-$$
-- S: seasonal component
-- T: trend component
-- E: error (remainder)
+$$ - S: seasonal component - T: trend component - E: error (remainder)
 
-- **Additive model**: $S_t + T_t + E_t$
-- **Multiplicative model**: $S_t \cdot T_t \cdot E_t$
+-   **Additive model**: $S_t + T_t + E_t$
 
-- model: error type | trend type | season type: A = additive; M = multiplicative; Z = automatically selected (default)
+-   **Multiplicative model**: $S_t \cdot T_t \cdot E_t$
+
+-   model: error type \| trend type \| season type: A = additive; M =
+    multiplicative; Z = automatically selected (default)
 
 ```{r}
 ets_model = ets(training, model = "AAA", allow.multiplicative.trend = TRUE)
@@ -95,8 +103,10 @@ MAPE(ets_forecast$mean, validation) *100
 ```
 
 ```{r}
+
 plot(AirPassengers, col="blue", xlab="Year", ylab="Passengers", main="Exponential smoothing - additive model", type='l')
 lines(ets_forecast$mean, col="red", lwd=2)
+
 ```
 
 ```{r}
@@ -116,8 +126,10 @@ lines(ets_forecast$mean, col="red", lwd=2)
 
 ### Holte-Winters method
 
-Double Seasonal Holt-Winters (DSHW) allows for two seasonalities: a smaller one repeated often and a bigger one repeated less often. 
-For the method to work however, the seasonalities need to be nested, meaning one must be an integer multiple of the other (2 and 4, 24 and 168, etc.).
+Double Seasonal Holt-Winters (DSHW) allows for two seasonalities: a
+smaller one repeated often and a bigger one repeated less often. For the
+method to work however, the seasonalities need to be nested, meaning one
+must be an integer multiple of the other (2 and 4, 24 and 168, etc.).
 
 Here we specify a season pattern and a yearly pattern
 
@@ -133,11 +145,14 @@ lines(dshw_model$mean, col="red", lwd=2)
 
 ## 3. BATS and TBATS
 
-BATS: *B*ox-Cox transformation, *A*RMA (autoregressive moving average) errors, *T*rend and *S*easonal components
-TBATS: *T*rigonometric seasonality, *B*ox-Cox transformation, *A*RMA (autoregressive moving average) errors, *T*rend and *S*easonal components
+BATS: *B*ox-Cox transformation, *A*RMA (autoregressive moving average)
+errors, *T*rend and *S*easonal components TBATS: *T*rigonometric
+seasonality, *B*ox-Cox transformation, *A*RMA (autoregressive moving
+average) errors, *T*rend and *S*easonal components
 
-BATS and TBATS allow for multiple seasonalities (also more than 2). 
-TBATS is a modification (an improvement really) of BATS that allows for multiple non-integer seasonality cycles.
+BATS and TBATS allow for multiple seasonalities (also more than 2).
+TBATS is a modification (an improvement really) of BATS that allows for
+multiple non-integer seasonality cycles.
 
 ```{r}
 tbats_model = forecast::tbats(training)
@@ -156,12 +171,15 @@ Autoregressive Integrated Moving Average model.
 
 ARIMA models contain three things:
 
-- AR(p): autoregressive part of the model. Means that we use $p$ past observations from the time series as predictors
-- Differencing (**d**): Used to transform the time-series into a stationary data sequence 
-by taking the differences between successive observations at appropriate lags $d$
-- MA(q): Moving Average - uses $q$ past forecast errors as predictors
+-   AR(p): autoregressive part of the model. Means that we use $p$ past
+    observations from the time series as predictors
+-   Differencing (**d**): Used to transform the time-series into a
+    stationary data sequence by taking the differences between
+    successive observations at appropriate lags $d$
+-   MA(q): Moving Average - uses $q$ past forecast errors as predictors
 
-If you need to add a seasonal component to the model you can use SARIMA (Seasonal ARIMA).
+If you need to add a seasonal component to the model you can use SARIMA
+(Seasonal ARIMA).
 
 ```{r}
 sarima_forecast = astsa::sarima.for(training, n.ahead=length(validation),
@@ -176,15 +194,21 @@ lines(sarima_forecast$pred, col="red", lwd=2)
 
 ## 5. Setting up a one-step-ahead forecast
 
-In all the previous examples, we forecasted 4 years into the future. 
-However, if you want to forecast on a daily basis, why would you use a forecasted value from 4 years ago when you could use the real observations to predict tomorrow?
+In all the previous examples, we forecasted 4 years into the future.
+However, if you want to forecast on a daily basis, why would you use a
+forecasted value from 4 years ago when you could use the real
+observations to predict tomorrow?
 
-The idea of setting up a one-step-ahead forecast is to evaluate how well a model would have done if you were forecasting for one day ahead, 
+The idea of setting up a one-step-ahead forecast is to evaluate how well
+a model would have done if you were forecasting for one day ahead,
 during 4 years, using latest observations to make your forecast.
 
-Simply put: instead of forecasting once for the 48 months ahead, we forecast 48 times for the upcoming month, using latest observations.
+Simply put: instead of forecasting once for the 48 months ahead, we
+forecast 48 times for the upcoming month, using latest observations.
 
-Coding this is quite simple. All we need is to iteratively add the latest observation to the training dataset, forecast from there and repeat. 
+Coding this is quite simple. All we need is to iteratively add the
+latest observation to the training dataset, forecast from there and
+repeat.
 
 ```{r}
 one_step_ahead_sarima = matrix(ncol = 2, nrow = 48)
@@ -213,7 +237,8 @@ lines(ts(one_step_ahead_sarima[,2], start = c(1957,1), frequency = 12), col="red
 
 ## Stillbirth data
 
-European Stillbirth Rate Time Series Dataset (data repo at: https://zenodo.org/record/6505519)
+European Stillbirth Rate Time Series Dataset (data repo at:
+<https://zenodo.org/record/6505519>)
 
 ```{r read-plankton-data}
 basefolder = "/home/filippo/Dropbox/cursos/longitudinal_data_analysis/longitudinal_data_analysis"
@@ -231,7 +256,6 @@ temp = na.omit(temp)
 ```{r}
 temp = ts(temp$sbr_swe, start = 1775, end = 2021)
 ```
-
 
 ```{r}
 #Create training and validation sets: time-wise
@@ -273,6 +297,10 @@ lines(ts(one_step_ahead_sarima[,2], start = 2000, frequency = 1), col="red", lwd
 
 ## Normalising time series data?
 
+In some circumstances, time series data may need to be normalised: e.g. future data outside the range of training data, especially when the forecasting method does not account for seasonality, trend etc.
+
+We can use percent change aong the squence:
+
 ```{r}
 temp_norm = stillbirth |> dplyr::select(year, sbr_swe)
 temp_norm = na.omit(temp_norm)
@@ -286,9 +314,19 @@ temp_norm$sbr_swe <- NULL
 ```
 
 ```{r}
+head(temp_norm)
+```
+
+
+```{r}
 temp_norm = ts(temp_norm$sbr_swe_norm, start = 1775, end = 2021)
 ```
 
+```{r}
+autoplot(temp_norm)
+```
+
+#### Splitting data
 
 ```{r}
 #Create training and validation sets: time-wise
@@ -296,20 +334,43 @@ training = window(temp_norm, start = 1775, end = 1999)
 validation = window(temp_norm, start = 2000)
 ```
 
+#### Trainig series
+
+```{r}
+autoplot(training)
+```
+
+#### Validation series
+
+```{r}
+autoplot(validation)
+```
+
+### Fitting the forecasting model on the training data
 
 ```{r}
 sarima_forecast = astsa::sarima.for(training, n.ahead=length(validation),
                               p=0,d=1,q=1,P=1,D=1,Q=0,S=10)
 ```
 
-#### Backtransform
+### Backtransform
 
-We now have test values expressed as sequential percent differences.
-To evaluate our model, we need to backtransform the data to the original stillbirth rate:
+We now have test values expressed as sequential percent differences. To
+evaluate our model, we need to backtransform the data to the original
+stillbirth rate:
 
-- dived by 100 (to remove percent)
-- multiply by the original validation data shifted backwards by 1 (sequential differences): we obtain the vector of sequential differences
-- now sum the original validation data (shifted backwards by 1) and you'll have the original validation data
+-   dived by 100 (to remove percent)
+-   multiply by the original validation data shifted backwards by 1
+    (sequential differences): we obtain the vector of sequential
+    differences
+-   now sum the original validation data (shifted backwards by 1) and
+    you'll have the original validation data
+
+```{r}
+## we recreate the temp dataframe (it's now a TS - time series)
+temp = stillbirth |> dplyr::select(year, sbr_swe)
+temp = na.omit(temp)
+```
 
 ```{r}
 ## validation is from year 200
@@ -318,9 +379,15 @@ d = (validation/100)*valid_orig[-length(valid_orig)] ## vector of sequential dif
 d + valid_orig[-length(valid_orig)]
 ```
 
-This was easy (actually, we already had the original validation data, this was mainly a sanity check test).
-We need to do the same thing for the model predictions, to bring them on the same scale as the original stillbirth rate.
+```{r}
+valid_orig
+```
 
+
+This was easy (actually, we already had the original validation data,
+this was mainly a sanity check test). We need to do the same thing for
+the model predictions, to bring them on the same scale as the original
+stillbirth rate.
 
 ```{r}
 d = (sarima_forecast$pred/100)*valid_orig[-length(valid_orig)]
@@ -333,16 +400,14 @@ We can now calculate the mean absolute percentage error:
 MAPE(backtransformed_pred, valid_orig[-1]) * 100
 ```
 
-
 ```{r}
 plot(temp, col="blue", xlab="Year", ylab="Stillbirth", main="SARIMA Forecast", type='l')
 lines(ts(backtransformed_pred, start = 2000, frequency = 1), col="red", lwd=3)
 ```
 
-
-**Q: would normalization improve predictions with the naive method? Try it!**
+**Q: would normalization improve predictions with the naive method? Try
+it!**
 
 ```{r}
 ## your code here!
 ```
-
