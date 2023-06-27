@@ -8,7 +8,7 @@ Instructors: *Filippo Biscarini, Andreia Amaral*
 This course will introduce students, researchers and professionals to the analysis of longitudinal data, i.e. data with a time component. The course will describe the main types of longitudinal data (e.g. treatments over timepoints, time series data), and a number of approaches to process and analyse such data.
 
 Each day the course will start at **14:00** and end at **20:00** (CET).
-As a general rule, we'll have a longer break (30 minutes) at 16:00 and two shorter breaks (10-15 minutes) later on during the day (to be decided flexibly depending on the sessions).  
+As a general rule, we'll have a longer break (30 minutes) at about 17:00 and two shorter breaks (10-15 minutes) later on during the day (to be decided flexibly depending on the sessions).  
 
 <!-- timetable: [here](https://docs.google.com/) -->
 
