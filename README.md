@@ -19,12 +19,12 @@ As a general rule, we'll have a longer break (30 minutes) at about 17:00 and two
 - Lecture 1: [Longitudinal data: examples and challenges](slides/1.introduction.pdf) [Filippo]
 - Lab 1: First encounter with longitudinal data [Filippo]
     - [1.longitudinal_data.Rmd](day_1/1.longitudinal_data.Rmd)
-- Lecture 2: [The basic experimental setting: treatments and timepoints](slides/) [Filippo]
+- Lecture 2: [The basic experimental setting: treatments and timepoints](slides/2.treatments_and_timepoints.pdf) [Filippo]
 - Lab 2: Treatments and timepoints in R [Filippo]
     - [2.1.treatments_and_timepoints.Rmd](day_1/2.1.treatments_and_timepoints.Rmd)
     - [2.2.exercise.Rmd](day_1/2.2.exercise.Rmd)
     - [2.3.linear_regression_with_tidymodels.Rmd](day_1/2.3.linear_regression_with_tidymodels.Rmd)
-- Lecture 3: [The classical statistical perspective](slides/) [Filippo]
+- Lecture 3: [The classical statistical perspective](slides/3.repeated_records.pdf) [Filippo]
 - Lab 3: Models to analyse data with repeated records over time (multiple time points) and space (multiple locations) in R
     - [3.repeated_records.Rmd](day_1/3.repeated_records.Rmd)
 - Lecture 4: Difference-in-differences (diff-in-diff) [Filippo]
