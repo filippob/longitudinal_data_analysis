@@ -40,7 +40,7 @@ Characteristics of time events:
 library("survival")
 library("survminer")
 
-data("lung")
+# data("lung")
 head(lung) |> kable(format = "html", table.attr = "style = \"color: white;\"")
 ```
 
