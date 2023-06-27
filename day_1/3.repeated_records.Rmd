@@ -3,6 +3,9 @@ title: "mixed_models"
 author: "Filippo Biscarini"
 date: "2023-06-08"
 output: html_document
+editor_options: 
+  markdown: 
+    wrap: 72
 ---
 
 ```{r setup, include=FALSE}
@@ -20,33 +23,37 @@ library("data.table")
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-This is a frequent case of longitudinal data: repeated observations taken on individuals.
-The objective is to study the change of the target variable over time (multiple measurements) and the factors (explanatory variables) that influence this change.
-Observations that belong to the same individual (patient, animal, plant, group) tend to be more similar than observations from different individuals, 
-and this covariance need to be accounted for in the model of analysis.
+This is a frequent case of longitudinal data: repeated observations
+taken on individuals. The objective is to study the change of the target
+variable over time (multiple measurements) and the factors (explanatory
+variables) that influence this change. Observations that belong to the
+same individual (patient, animal, plant, group) tend to be more similar
+than observations from different individuals, and this covariance need
+to be accounted for in the model of analysis.
 
-Repeated-record data are a special case of hierarchical data, where observations are nested within levels (e.g. milk yield measurements within cow, or cows within herd, fish catches within region etc.).
+Repeated-record data are a special case of hierarchical data, where
+observations are nested within levels (e.g. milk yield measurements
+within cow, or cows within herd, fish catches within region etc.).
 
-- $y_{ij}$: target variable measured on individual *i* at time *j*
-- $\Sigma$: symmetric covariance matrix between individuals
+-   $y_{ij}$: target variable measured on individual *i* at time *j*
+-   $\Sigma$: symmetric covariance matrix between individuals
 
 ## Cow data
 
-Dataset on dairy cows: 
-  
-- NID: cow ID
-- dtn: birthdate
-- dtp: calving date
-- dtcf: milk testing day
-- aua: herd
-- nl: parity
-- milk: kg/day
-- fat %
-- protein %
-- SCC: somatic cells count
-- fat kg
-- protein kg
+Dataset on dairy cows:
 
+-   NID: cow ID
+-   dtn: birthdate
+-   dtp: calving date
+-   dtcf: milk testing day
+-   aua: herd
+-   nl: parity
+-   milk: kg/day
+-   fat %
+-   protein %
+-   SCC: somatic cells count
+-   fat kg
+-   protein kg
 
 ```{r read-the-cow-data}
 basefolder = "/home/filippo/Dropbox/cursos/longitudinal_data_analysis/longitudinal_data_analysis"
@@ -64,7 +71,8 @@ table(cows$NID)
 
 ### Preprocessing
 
-We encode dates as date data (not strings); in *R* we can use functions from the `lubridate` package to handle dates:
+We encode dates as date data (not strings); in *R* we can use functions
+from the `lubridate` package to handle dates:
 
 ```{r}
 cows$date = parse_date_time(cows$dtcf, orders = '%d/%m/%Y')
@@ -82,11 +90,12 @@ cows$parity <- cut(x = cows$nl, breaks = c(0,1,2,3,4,5,Inf), labels = c("1","2",
 
 Then we select the variables of interest.
 
-- target is milk kg / day
-- time is the test-day date
-- systematic effects are herd and parity (regrouped as above)
+-   target is milk kg / day
+-   time is the test-day date
+-   systematic effects are herd and parity (regrouped as above)
 
 ```{r}
+
 cows_reduced <- cows |>
   dplyr::select(c(NID, date, aua, parity, latte)) |>
   rename(milk = latte, herd = aua) |>
@@ -136,7 +145,7 @@ cows_reduced |>
 ### Repeatability model
 
 ```{r}
-results <- mmer(fixed = milk ~ parity + herd,
+results <- sommer::mmer(fixed = milk ~ parity + herd,
               random= ~ NID,
               rcov= ~ units,
               data=cows_reduced, 
@@ -146,7 +155,6 @@ results <- mmer(fixed = milk ~ parity + herd,
 ```{r}
 summary(results)$varcomp
 ```
-
 
 ```{r}
 vpredict(results, repeatability ~ (V1)/(V1+V2))
@@ -203,8 +211,14 @@ Correlation between fitted and observed values.
 cor(cows_reduced$milk, y_hat)
 ```
 
-The correlation between observed and predicted (fitted) values of the target variable 
-is one way to measure the **predictive ability** of the model.
+```{r}
+sqrt(sum((cows_reduced$milk-y_hat)^2)/nrow(cows_reduced)) ## RMSE
+```
+
+
+The correlation between observed and predicted (fitted) values of the
+target variable is one way to measure the **predictive ability** of the
+model.
 
 **Q: have we measured correctly the predictive ability of the model?**
 
@@ -217,7 +231,6 @@ vv <- sample(rownames(cows_reduced),round(n/10))
 vec = rownames(cows_reduced) %in% vv
 y.trn[vec,"milk"] <- NA
 ```
-
 
 ```{r}
 results <- mmer(fixed = milk ~ parity + herd,
@@ -238,7 +251,6 @@ b <- bind_rows(b, data.frame("Trait"="milk","Effect"="1","Estimate"=0)) ## add r
 b <- bind_rows(b, data.frame("Trait"="milk","Effect"="2720373","Estimate"=0)) ## add reference class for the herd effect
 ```
 
-
 ```{r}
 test$parity_effect = b$Estimate[match(test$parity, b$Effect)]
 test$herd_effect = b$Estimate[match(test$herd, b$Effect)]
@@ -246,7 +258,6 @@ test$u_effect = u$u[match(test$NID, u$id)]
 test$intercept = filter(b, Effect == "(Intercept)") |> pull("Estimate")
 test$intercept = as.numeric(test$intercept)
 ```
-
 
 ```{r}
 test <- test |> mutate(prediction = intercept + parity_effect + herd_effect + u_effect)
@@ -260,7 +271,6 @@ cor(test$milk, test$prediction)
 ```{r}
 sqrt(sum((test$milk-test$prediction)^2)/nrow(test)) ## RMSE
 ```
-
 
 ```{r}
 train = na.omit(y.trn)
@@ -276,14 +286,15 @@ cor(train$pred, train$milk)
 sqrt(sum((train$milk-train$pred)^2)/nrow(train)) ## RMSE
 ```
 
-
 ### Residuals and model diagnostics
 
 #### 1. Linearity
 
- - linearity between $y$ and the predictors $X$
- - we expect that there is no significant trend in the residuals $\epsilon$ with respect to the fitted value $\hat{y}$ or any predictor
- 
+-   linearity between $y$ and the predictors $X$
+-   we expect that there is no significant trend in the residuals
+    $\epsilon$ with respect to the fitted value $\hat{y}$ or any
+    predictor
+
 ```{r}
 df <- data.frame("fitted" = results$fitted, "residuals" = results$residuals, "parity" = train$parity)
 ggplot(df, aes(x = fitted, y = residuals)) + geom_point() + geom_smooth(se = FALSE, method = "loess")
@@ -295,10 +306,12 @@ ggplot(df, aes(x = parity, y = residuals)) + geom_jitter(aes(color=parity))
 
 #### 2. Normality
 
- - assumed normality of the residuals 
- - the central limit theorem will make $\hat{\beta}$ asymptotically normal (the linear model is robust to departures from normality)
+-   assumed normality of the residuals
+-   the central limit theorem will make $\hat{\beta}$ asymptotically
+    normal (the linear model is robust to departures from normality)
 
-We expect the residuals to follow the normal distribution $\rightarrow$ QQ-plot
+We expect the residuals to follow the normal distribution $\rightarrow$
+QQ-plot
 
 ```{r}
 norm_res = (results$residuals-mean(results$residuals))/(sd(results$residuals))
@@ -315,10 +328,13 @@ hist(results$residuals, breaks = 25)
 
 #### 3. Homoskedasticity
 
-- assumption of constant-variance of the errors
+-   assumption of constant-variance of the errors
 
-Heteroskedasticity can be detected by looking at patterns in the residuals vs. fitted values plot:  
-scale-location plot, where the standardized residuals are transformed by a square root of its absolute value, and inspect the deviations in the positive axis.
+Heteroskedasticity can be detected by looking at patterns in the
+residuals vs. fitted values plot:
+scale-location plot, where the standardized residuals are transformed by
+a square root of its absolute value, and inspect the deviations in the
+positive axis.
 
 ```{r}
 df$sqrt_res = sqrt(abs(norm_res))
@@ -327,20 +343,28 @@ ggplot(df, aes(x = fitted, y = sqrt_res)) + geom_point() + geom_smooth(se = FALS
 
 #### 4. Independence
 
-- independence of records: usual assumption in linear models
+-   independence of records: usual assumption in linear models
 
-Here, we already knew that observations were not independent (multiple records from the same cow), and we accounted for this in the model (**repeatability model**).
+Here, we already knew that observations were not independent (multiple
+records from the same cow), and we accounted for this in the model
+(**repeatability model**).
 
-We can look for the presence of autocorrelation, which appears when there is some kind of serial dependence in the measurement of observations. 
-The serial plot of the residuals allows to detect time trends in them:
+We can look for the presence of autocorrelation, which appears when
+there is some kind of serial dependence in the measurement of
+observations. The serial plot of the residuals allows to detect time
+trends in them:
 
 ```{r}
 plot(results$residuals, type="o")
 ```
 
-We don't see any trends pointing to autocorrelation of the data (remember, we already used a model that accounted for dependence in the data!)
-The serial plot of residuals would allow to spot positive autocorrelation (upward or downward trend); 
-negative autocorrelation (alternating small-large or positive-negative residuals) is also possible: the lag-plot can visually check for it, we expect no trends in such plot.
+We don't see any trends pointing to autocorrelation of the data
+(remember, we already used a model that accounted for dependence in the
+data!) The serial plot of residuals would allow to spot positive
+autocorrelation (upward or downward trend); negative autocorrelation
+(alternating small-large or positive-negative residuals) is also
+possible: the lag-plot can visually check for it, we expect no trends in
+such plot.
 
 ```{r}
 lag.plot(results$residuals, lags = 1, do.lines = FALSE)
@@ -348,11 +372,12 @@ lag.plot(results$residuals, lags = 1, do.lines = FALSE)
 
 #### 5. Additional diagnostics
 
-- multicollinearity (correlations between predictors ($x$'s))
-- outliers (extreme $y$'s)
-- high-leverage points (extreme predictors $x$'s)
+-   multicollinearity (correlations between predictors ($x$'s))
+-   outliers (extreme $y$'s)
+-   high-leverage points (extreme predictors $x$'s)
 
-The `plot()` of the fitted model provides a combined summary of diagnostics plots:
+The `plot()` of the fitted model provides a combined summary of
+diagnostics plots:
 
 ```{r}
 plot(results)
@@ -360,8 +385,6 @@ plot(results)
 
 ## Exercise: can you improve the model?
 
-- define a performance metric
-- modify the model
-- run it and check the performance
-
-
+-   define a performance metric
+-   modify the model
+-   run it and check the performance
