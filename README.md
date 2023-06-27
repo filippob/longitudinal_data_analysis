@@ -24,7 +24,7 @@ As a general rule, we'll have a longer break (30 minutes) at about 17:00 and two
     - [2.1.treatments_and_timepoints.Rmd](day_1/2.1.treatments_and_timepoints.Rmd)
     - [2.2.exercise.Rmd](day_1/2.2.exercise.Rmd)
     - [2.3.linear_regression_with_tidymodels.Rmd](day_1/2.3.linear_regression_with_tidymodels.Rmd)
-- Lecture 3: [The classical statistical perspective](slides/3.repeated_records.pdf) [Filippo]
+- Lecture 3: [Analysis of repeated records](slides/3.repeated_records.pdf) [Filippo]
 - Lab 3: Models to analyse data with repeated records over time (multiple time points) and space (multiple locations) in R
     - [3.repeated_records.Rmd](day_1/3.repeated_records.Rmd)
 - Lecture 4: Difference-in-differences (diff-in-diff) [Filippo]
