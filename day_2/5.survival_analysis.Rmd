@@ -24,33 +24,45 @@ The Cox proportional-hazards model (Cox, 1972) is essentially a regression model
 
 Examples of types of events:
 
-- Relapse
-- Progression
-- Death
+-   Relapse
+-   Progression
+-   Death
 
 Characteristics of time events:
 
-- subjects enter at different times and have different duration of follow-up
-- entire survival experience, not just the percentages who remain alive at the end of the study
-- the survival distributions may differ even though the five-year survival rates are similar
-
+-   subjects enter at different times and have different duration of follow-up
+-   entire survival experience, not just the percentages who remain alive at the end of the study
+-   the survival distributions may differ even though the five-year survival rates are similar
 
 ## Survival analysis
+
 ```{r}
 library("survival")
 library("survminer")
 
 data("lung")
-head(lung)
+head(lung) |> kable(format = "html", table.attr = "style = \"color: white;\"")
 ```
 
-- a survival object created using the function `Surv()`: survival time (time from enrollment to end of study), status at the end of study (dead/censored)
-- the data set containing the variables: covariates (e.g. sex)
+-   `time`: days
+-   `status`: `1` = censored; `2` = dead
+-   `sex`: 1 = male; 2 = female
+
+```{r}
+lung |> 
+  group_by(sex, status) |> 
+  summarise(N = n()) |>
+  spread(key = status, value = N)
+```
+
+-   a survival object created using the function `Surv()`: survival time (time from enrollment to end of study), status at the end of study (dead/censored)
+-   the data set containing the variables: covariates (e.g. sex)
 
 ```{r}
 fit <- survfit(Surv(time, status) ~ sex, data = lung)
 print(fit)
 ```
+
 ```{r, label='kaplar-meier-curve', fig.height=10, fig.width=10}
 # Change color, linetype by strata, risk.table color by strata
 ggsurvplot(fit,
@@ -74,7 +86,7 @@ ggsurvplot(fit,
           fun = "event")
 ```
 
-#### Cummulative hazard 
+#### Cummulative hazard
 
 It is defined as $H(t)=−log(survivalfunction)=−log(S(t))$
 
@@ -91,15 +103,23 @@ ggsurvplot(fit,
 
 #### Kaplan-Meier life table: summary of survival curves
 
+-   time: the time point at which the curve has a step
+-   n.risk: the number of subjects at risk at time *t*
+-   n.event: the number of events that occur at time *t*
+-   n.censor: number of censored events at time *t*
+-   surv: estimate of survival
+
 ```{r}
 res.sum <- surv_summary(fit)
-head(res.sum)
+head(res.sum, 10) |> kable(format = "html", table.attr = "style = \"color: white;\"")
 ```
 
 #### Log-Rank test comparing survival curves: survdiff()
 
+Tests if there is a difference between two or more survival curves: `rho` = 0 is log-rank test
+
 ```{r}
-surv_diff <- survdiff(Surv(time, status) ~ sex, data = lung)
+surv_diff <- survdiff(Surv(time, status) ~ sex, data = lung, rho = 0)
 surv_diff
 ```
 
@@ -128,6 +148,7 @@ res.cox
 res.cox <- coxph(Surv(time, status) ~ age + sex + ph.ecog, data =  lung)
 summary(res.cox)
 ```
+
 ```{r}
 library("lmtest")
 lrtest(res.cox,"ph.ecog")
