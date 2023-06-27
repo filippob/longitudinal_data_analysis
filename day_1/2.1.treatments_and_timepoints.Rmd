@@ -389,8 +389,6 @@ fit = lm(value ~ Week + Treatment + Week:Treatment, data=school_time)
 summary(fit)
 ```
 
-β3 is the difference in the effect of protein on muscle mass between those who exercise and those who do not. Or vice-versa, it is the difference in the effect of exercise on muscle mass between those who take protein supplements and those who don’t
-
 - `Week0`: average `Time in School` at Week 0 vs Week -1, irrespective of treatment and interaction
 - `Gentamycin`: average `Time in School` of treated fish, irrespective of time and interaction
 - `Week0:Gentamycin`: average difference in the effect of `Gentamycin` on `Time in School` between `Week0` and `Week -1`
