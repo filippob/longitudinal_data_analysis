@@ -15,8 +15,8 @@ As a general rule, we'll have a longer break (30 minutes) at about 17:00 and two
 **Day 1**
 
 - Lecture 0: General Introduction / Overview of the Course [Filippo]
-    - [General Introduction](slides/)
-- Lecture 1: [Longitudinal data: examples and challenges](slides/) [Filippo]
+    - [General Introduction](slides/1.introduction.pdf)
+- Lecture 1: [Longitudinal data: examples and challenges](slides/1.introduction.pdf) [Filippo]
 - Lab 1: First encounter with longitudinal data [Filippo]
     - [1.longitudinal_data.Rmd](day_1/1.longitudinal_data.Rmd)
 - Lecture 2: [The basic experimental setting: treatments and timepoints](slides/) [Filippo]
