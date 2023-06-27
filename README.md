@@ -52,6 +52,7 @@ As a general rule, we'll have a longer break (30 minutes) at about 17:00 and two
  - Lab 8: Linear Mixed Models in R
        - Day3_data.RData
        -Day3_analysis.Rmd
+       
  - Lab 9: Testing for the effects of variables in R
  - Lab 10: Group effect and Interaction between time and group in R
  - Lab 11: Parametric curves and prediction of random effects in R
