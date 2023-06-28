@@ -40,7 +40,7 @@ As a general rule, we'll have a longer break (30 minutes) at about 17:00 and two
 - Lab 6: Cross-validation strategies in R
     - [6.1.cross_validation.Rmd](day_2/6.1.cross_validation.Rmd)
     - [6.2.block_cross_validation.Rmd](day_2/6.2.block_cross_validation.Rmd)
-- Lecture 7: [Time series and forecasting](slides/7.times_series_and_forecasting.pdf)
+- Lecture 7: [Time series and forecasting](slides/7.time_series_and_forecasting.pdf)
 - Lab 7: Time series and forecasting in R
     - [7.1.time_series_and_autocorrelations.Rmd](day_2/7.1.time_series_and_autocorrelations.Rmd)
     - [7.2.forecasting.Rmd](day_2/7.2.forecasting.Rmd)
