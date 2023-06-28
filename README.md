@@ -55,6 +55,7 @@ As a general rule, we'll have a longer break (30 minutes) at about 17:00 and two
      - [8.1 Day3_Analysis_Lab8-Lab11](https://github.com/filippob/longitudinal_data_analysis/blob/main/day_3/Day3_lab8_start.Rmd)
        
  - Lab 9: Testing for the effects of variables in R
+     - [Lab_9_slides](https://github.com/filippob/longitudinal_data_analysis/blob/main/slides/Day3_lab9.pdf)
 
  - Lab 10: Group effect and Interaction between time and group in R
  - Lab 11: Parametric curves and prediction of random effects in R
