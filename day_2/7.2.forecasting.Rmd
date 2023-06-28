@@ -43,8 +43,9 @@ Any forecasting method should be evaluated by being compared to a naive
 method. This helps ensure that the efforts put in having a more complex
 model are worth it in terms of performance.
 
-The simplest of all methods is called simple naive. Extremely simple:
-the forecast for tomorrow is what we are observing today.
+The simplest of all methods is called simple naive forecasting.
+Extremely simple: the forecast for tomorrow is what we are observing
+today.
 
 Another approach, seasonal naive, is a little more "complex": the
 forecast for tomorrow is what we observed the week/month/year (depending
@@ -183,7 +184,7 @@ If you need to add a seasonal component to the model you can use SARIMA
 
 ```{r}
 sarima_forecast = astsa::sarima.for(training, n.ahead=length(validation),
-                              p=0,d=1,q=1,P=1,D=1,Q=0,S=12)
+                              p=2,d=1,q=1,P=1,D=1,Q=1,S=12)
 MAPE(sarima_forecast$pred, validation) * 100
 ```
 
@@ -254,6 +255,7 @@ temp = na.omit(temp)
 ```
 
 ```{r}
+
 temp = ts(temp$sbr_swe, start = 1775, end = 2021)
 ```
 
@@ -265,7 +267,7 @@ validation = window(temp, start = 2000)
 
 ```{r}
 sarima_forecast = astsa::sarima.for(training, n.ahead=length(validation),
-                              p=0,d=1,q=1,P=1,D=1,Q=0,S=10)
+                              p=2,d=1,q=1,P=0,D=1,Q=0,S=10)
 
 MAPE(sarima_forecast$pred, validation) * 100
 ```
@@ -278,7 +280,7 @@ for (i in 1:nyears) {
   
   training_observed = window(temp, start = 1775, end = 1999+i, frequency = 1)
   
-  forecasted.sarima = sarima.for(training_observed,n.ahead=1,p=0,d=1,q=1,P=1,D=1,Q=0,S=10, plot = FALSE)
+  forecasted.sarima = sarima.for(training_observed,n.ahead=1,p=1,d=1,q=1,P=1,D=1,Q=0,S=10, plot = FALSE)
   
   demandforecast = forecasted.sarima$pred
   observed = validation[[i]]
@@ -297,7 +299,9 @@ lines(ts(one_step_ahead_sarima[,2], start = 2000, frequency = 1), col="red", lwd
 
 ## Normalising time series data?
 
-In some circumstances, time series data may need to be normalised: e.g. future data outside the range of training data, especially when the forecasting method does not account for seasonality, trend etc.
+In some circumstances, time series data may need to be normalised: e.g.
+future data outside the range of training data, especially when the
+forecasting method does not account for seasonality, trend etc.
 
 We can use percent change aong the squence:
 
@@ -316,7 +320,6 @@ temp_norm$sbr_swe <- NULL
 ```{r}
 head(temp_norm)
 ```
-
 
 ```{r}
 temp_norm = ts(temp_norm$sbr_swe_norm, start = 1775, end = 2021)
@@ -382,7 +385,6 @@ d + valid_orig[-length(valid_orig)]
 ```{r}
 valid_orig
 ```
-
 
 This was easy (actually, we already had the original validation data,
 this was mainly a sanity check test). We need to do the same thing for
