@@ -169,7 +169,15 @@ print(r1)
 **Q: can you calculate the autocorrelation with lag = 2?** (let's do this together!)
 
 ```{r}
-## your code here!!
+## LAG 2
+n = length(v)
+v_avg = mean(v)
+v1 = v[3:n]
+v2 = v[1:(n-2)]
+
+## autocorrelation with lag = 1
+r1 = ((v1 - v_avg) %*% (v2 - v_avg))/((v - v_avg) %*% (v - v_avg))
+print(r1)
 ```
 
 The `acf()` function from the `stats` package:
