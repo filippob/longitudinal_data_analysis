@@ -51,6 +51,7 @@ As a general rule, we'll have a longer break (30 minutes) at about 17:00 and two
  - Lecture 8: Introduction to Linear Mixed Models
    - [Lecture 8](https://github.com/filippob/longitudinal_data_analysis/blob/main/slides/8.Day3_Lecture1.pdf)
  - Lab 8: Linear Mixed Models
+     - [Lab_8_slides](https://github.com/filippob/longitudinal_data_analysis/blob/main/slides/Day3_Lab8.pdf) 
      - [8.1 Day3_Analysis_Lab8-Lab11](https://github.com/filippob/longitudinal_data_analysis/blob/main/day_3/Day3_lab8_start.Rmd)
        
  - Lab 9: Testing for the effects of variables in R
