@@ -27,7 +27,7 @@ As a general rule, we'll have a longer break (30 minutes) at about 17:00 and two
 - Lecture 3: [Analysis of repeated records](slides/3.repeated_records.pdf) [Filippo]
 - Lab 3: Models to analyse data with repeated records over time (multiple time points) and space (multiple locations) in R
     - [3.repeated_records.Rmd](day_1/3.repeated_records.Rmd)
-- Lecture 4: [Difference-in-differences (diff-in-diff)](slides/3.difference_in_differences.pdf) [Filippo]
+- Lecture 4: [Difference-in-differences (diff-in-diff)](slides/4.difference_in_differences.pdf) [Filippo]
  
 **Day 2**
 
