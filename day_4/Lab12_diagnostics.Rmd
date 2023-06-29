@@ -1,0 +1,101 @@
+---
+title: "Analysis_diagnostics"
+output: html_document
+date: "2023-06-29"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+library(ggplot2)
+library(car)
+
+toy_data<-read.table("/Users/andreiafonseca/Documents/Curso_Physalia_Longitudinal_data/diagnostics_examples.txt", header=T, sep="\t")
+
+toy_data
+
+# distance to mean of point 8
+numerator = (toy_data$Nclinics[8] - mean(toy_data$Nclinics))**2
+
+# distance to mean of all the other points
+denominator = sum((toy_data$Nclinics - mean(toy_data$Nclinics))**2)
+
+# putting it together
+h_8 = 1/n+numerator/denominator
+
+h_8 # h_8=0.969 which very high very close to 1 the maximum value
+
+##assessing discrepancy
+
+
+# fitting linear model
+mod_surviving = lm(Surviving~Nclinics, data=toy_data)
+
+
+# Extract the residuals from the linear regression model
+residuals <- resid(mod_surviving)
+
+# Plot Clinics vs Residuals
+plot(toy_data$Nclinics, residuals,
+     xlab = "Clinics", ylab = "Residuals",
+     main = "Clinics vs Residuals", pch = 16)
+
+# Calculate studentized residuals
+student_resid <- rstudent(mod_surviving)
+
+# Plot Clinics vs Studentized Residuals
+plot(toy_data$Nclinics, student_resid,
+     xlab = "Clinics", ylab = "Studentized Residuals",
+     main = "Clinics vs Studentized Residuals", pch = 16)
+
+# getting hatvalues and printing them
+hs = hatvalues(mod_surviving)
+as.numeric(hs)
+
+as.numeric(dffits(mod_surviving))
+
+##accessing influence
+
+as.numeric(dffits(mod_surviving))
+
+as.numeric(cooks.distance(mod_surviving))
+
+influencePlot(mod_surviving)
+
+
+
+# Calculate hat values and studentized residuals
+hat_values <- hatvalues(mod_surviving)
+student_resid <- rstudent(mod_surviving)
+
+# Create a data frame with hat values and studentized residuals
+df <- data.frame(Hat_Values = hat_values, Studentized_Residuals = student_resid)
+
+# Create the scatter plot using ggplot
+ggplot(df, aes(x = Hat_Values, y = Studentized_Residuals)) +
+  geom_point() +
+  xlab("Hat Values") +
+  ylab("Studentized Residuals") +
+  ggtitle("Hat Values vs Studentized Residuals")
+
+
+
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
