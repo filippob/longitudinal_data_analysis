@@ -1,0 +1,238 @@
+---
+title: "Day3_Lab8-13_start"
+output: html_document
+date: "2023-06-24"
+author: "Andreia J. Amaral"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+
+```{r cars}
+#load data file and see data object
+setwd("/Users/andreiafonseca/Documents/Curso_Physalia_Longitudinal_data/data/")
+load("Day3_Lab8_dog_data.RData")
+ls()
+head(data_dog_weight)
+data_dog_weight$measurement<- as.factor(data_dog_weight$measurement)
+
+#load required libraries
+library(labelled)   # labeling data
+library(rstatix)    # summary statistics
+library(ggpubr)     # convenient summary statistics and plots
+library(GGally)     # advanced plot
+library(car)        # useful for anova/wald test
+library(Epi)        # easy getting CI for model coef/pred
+library(lme4)       # linear mixed-effects models
+library(lmerTest)   # test for linear mixed-effects models
+library(emmeans)    # marginal means
+library(multcomp)   # CI for linear combinations of model coef
+library(geepack)    # generalized estimating equations
+library(ggeffects)  # marginal effects, adjusted predictions
+library(gt)         # nice tables
+
+library(tidyverse)  # for everything (data manipulation, visualization, coding, and more)
+
+
+theme_set(theme_minimal() + theme(legend.position = "bottom")) # theme for ggplot
+
+#Lab8 - Empty model
+#get some descriptive statistics
+
+group_by(data_dog_weight, age) %>% get_summary_stats(weight)
+
+#fitting model in R
+lin_0 <- lmer(weight ~ 1 + (1 | Id), data = data_dog_weight)
+summary(lin_0)
+#get beta 0
+ci.lin(lin_0)
+#testing variance components
+ranova(lin_0)
+
+#Lab9 --> time effect
+
+lin_age <- lmer(weight ~ measurement + (1 | Id), data = data_dog_weight)
+summary(lin_age)
+
+#can test whether the mean response is constant over time by testing the null hypothesis that all the regression coefficients used to model time are simultaneously equal to zero
+Anova(lin_age)
+
+#Lab10 --> group effect and interaction time::group
+
+lin_agesex <- lmer(weight ~ measurement + sex + (1 | Id), data = data_dog_weight)
+summary(lin_agesex)
+
+Anova(lin_agesex) # optional
+
+ci.lin(lin_agesex)
+tidy(emmeans(lin_agesex, c("measurement", "sex")), conf.int = TRUE)
+
+lin_agesexinter <- lmer(weight ~ measurement*sex + (1 | Id), data = data_dog_weight)
+lin_agesexinter
+Anova(lin_agesexinter, type = 3)
+
+#Lab11 -->  fit parametric curves to longitudinal data and prediction of random effects
+
+lin_agecsexinter <- lmer(weight ~ sex*age + (1 | Id), data = data_dog_weight)
+summary(lin_agecsexinter)
+
+lin_agec <- lmer(weight ~ age + (1 | Id), data = data_dog_weight)
+lin_agec
+
+#fit random intercept and slope
+
+lin_agecr <- lmer(weight ~ age + (age | Id), data = data_dog_weight)
+summary(lin_agecr)
+
+#get variance
+
+VarCorr(lin_agecr)
+as.data.frame(VarCorr(lin_agecr))
+
+#are there differences between males and females
+
+lin_agecsexinterr <- lmer(weight ~ age*sex + (age | Id), data = data_dog_weight) 
+summary(lin_agecsexinterr)
+
+# Lab 12 Model diagnostics
+
+#Use the plot() function with the residuals() method to create a residuals vs. fitted plot:
+plot(lin_age, which = 1)  # Residuals vs. Fitted values plot
+
+#Check the normality assumption of the residuals using a QQ-plot.
+qqnorm(residuals(lin_age))
+qqline(residuals(lin_age))
+
+plot(lin_age, which = 3) # Residuals vs. Predictor variable plot
+
+VarCorr(lin_age)
+
+# Fit the full model
+full_model <- lmer(weight ~ measurement + (1 | Id), data = data_dog_weight)
+
+# Fit a nested model without the random effect
+nested_model <- lm(weight ~ measurement, data = data_dog_weight)
+
+# Perform likelihood ratio test
+anova(full_model, nested_model)
+
+influencePlot(lin_age)
+
+
+#Lab 13 GEE interaction age:sex
+
+gee_inter <- geeglm(weight ~ sex*age, data = data_dog_weight,
+                    id = Id, family = gaussian, corstr = "exchangeable")
+summary(gee_inter)
+
+gee_inter_ind <- geeglm(weight ~ sex*age, data = data_dog_weight,
+                    id = Id, family = gaussian, corstr = "independence")
+summary(gee_inter_ind)
+
+gee_inter_ar1 <- geeglm(weight ~ sex*age, data = data_dog_weight,
+                    id = Id, family = gaussian, corstr = "ar1")
+summary(gee_inter_ar1)
+
+gee_inter_unst <- geeglm(weight ~ sex*age, data = data_dog_weight,
+                    id = Id, family = gaussian, corstr = "unstructured")
+summary(gee_inter_unst)
+
+QIC(gee_inter,gee_inter_ind, gee_inter_ar1,gee_inter_unst)
+
+```
+
+## Plots
+
+```{r pressure, echo=FALSE}
+#graphical representation of the model
+# Lab 8
+graph<-ggplot(data_dog_weight, aes(Id, weight)) +
+  geom_point(aes(col = measurement, shape = measurement)) +
+  geom_point(data = group_by(data_dog_weight, Id) %>%
+               summarise(weight = mean(weight), .groups = "drop"),
+             aes(col = "Mean", shape = "Mean"), size = 2.5) +
+  geom_hline(yintercept = mean(data_dog_weight$weight)) +
+  scale_shape_manual(values = c(19,19, 19, 19, 19, 19,19,19,19,19,19,19,4)) +
+  labs(x = "Dog id", y = "Live weight, g", col = "Measurement", shape = "Measurement")
+graph
+
+#Lab 9 - estimated trajectory from the fitted model time effect
+weight_fit <- bind_cols(
+  data_dog_weight, pred_age = predict(lin_age, re.form = ~ 0)
+)
+ggplot(weight_fit, aes(age, weight)) +
+  geom_line(aes(group = factor(Id))) +
+  geom_point(aes(y = pred_age), col = "blue", size = 2) + 
+  labs(x = "Age, days", y = "Weight , g")
+
+# Lab10 - group effect
+weight_fit$pred_agesex <- predict(lin_agesex, re.form = ~ 0)
+ggplot(weight_fit, aes(age, weight)) +
+  geom_line(aes(group = factor(Id))) +
+  geom_point(aes(y = pred_agesex, col = sex), size = 2) + 
+  labs(x = "Age, days", y = "Weight, g", col = "Sex")
+
+#Lab 10 -interaction age::sex
+
+weight_fit$pred_agesexinter <- predict(lin_agesexinter, re.form = ~ 0)
+ggplot(weight_fit, aes(age, weight)) +
+  geom_line(aes(group = factor(Id))) +
+  geom_point(aes(y = pred_agesexinter, col = sex), size = 2) + 
+  labs(x = "Age, day", y = "Weight, g", col = "Sex")
+
+#Lab 11 - parametric curves
+
+pred_agecsexinter <- expand.grid(age = seq(4, 15), sex = levels(data_dog_weight$sex)) %>% 
+  bind_cols(pred = predict(lin_agecsexinter, newdata = ., re.form = ~ 0))
+
+ggplot(data = pred_agecsexinter, aes(x = age, y = pred, col = sex)) +
+  geom_line() +
+  labs(x = "Age, days", y = "Weight, g", col = "Sex")
+
+#make curve for selected puppies
+sid <- c(10, 20)
+expand.grid(
+  age = seq(4, 15),
+  Id = sid
+) %>% 
+  bind_cols(
+    indiv_pred = predict(lin_agec, newdata = .),
+    marg_pred = predict(lin_agec, newdata = ., re.form = ~ 0)
+  ) %>% 
+  left_join(
+    filter(data_dog_weight, Id %in% sid), by = c("Id", "age")
+  ) %>% 
+  ggplot(aes(age, indiv_pred, group = Id, col = factor(Id))) +
+  geom_line() +
+  geom_point(aes(y = weight)) +
+  geom_line(aes(y = marg_pred, col = "Marginal"), lwd = 1.5) +
+  labs(x = "Age, days", y = "Weight, g", col = "Curve")
+
+#predicted value of the marginal (overall) and individual-specific mean response trajectories
+
+expand.grid(
+  age = seq(4, 15),
+  Id = unique(data_dog_weight$Id)
+) %>% 
+  bind_cols(
+    indiv_pred = predict(lin_agecr, newdata = .),
+    marg_pred = predict(lin_agecr, newdata = ., re.form = ~ 0)
+  ) %>% 
+  ggplot(aes(age, indiv_pred, group = Id)) +
+  geom_line(col = "grey") +
+  geom_line(aes(y = marg_pred), col = "blue", lwd = 1.5) +
+  labs(x = "Age, days", y = "Weight, g")
+
+#Lab12 - GEE
+
+pred_geeinter <- ggpredict(gee_inter, terms = c("age", "sex"))
+ggplot(pred_geeinter, aes(x, predicted, col = group)) + 
+  geom_line() +
+  geom_ribbon(aes(ymin = conf.low, ymax = conf.high, fill = group), alpha = .2, col = NA) +
+  labs(x = "Age, days", y = "Weight, g", col = "Sex", fill = "Sex")
+
+```
