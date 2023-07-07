@@ -83,7 +83,7 @@ load("Day3_Lab8_dog_data.RData")
 ls()
 head(data_dog_weight)
 data_dog_weight$measurement<- as.factor(data_dog_weight$measurement)
-````
+```
 #Lab8 - Empty model
 
 we start by investigating the empty model
@@ -128,9 +128,9 @@ graph
 
 this will be our model
 
-𝐸[𝑌_𝑖𝑗 ]= 𝛽_0+ 𝛽_1 𝑋_𝑖𝑗1+𝛽_2 𝑋_𝑖𝑗2+𝛽_3 𝑋_𝑖𝑗3+…+𝛽_11 𝑋_𝑖𝑗11
+𝐸[𝑌ij ]= 𝛽0+ 𝛽1 Xij1+𝛽2 Xij2+𝛽3 𝑋ij3+…+𝛽11 𝑋ij11
 
-where Xij1, Xij2, and …Xij11 are indicator variables for age 4, 5, 6, …15 days
+where Xij1, Xij2, and …Xij11 are indicator variables for age 4, 5, 6, …15 days
 
 ```{r}
 
@@ -169,11 +169,11 @@ So now we are goin to add to our model the fixed effect for GROUP (sex)
 
 and the model becomes like this
 
-𝐸[𝑌_𝑖𝑗 ]= 𝛽_0+ 𝛽_1 𝑋_𝑖𝑗1+𝛽_2 𝑋_𝑖𝑗2+𝛽_3 𝑋_𝑖𝑗3+…+𝛽_11 𝑋_𝑖𝑗11+ 𝛽_12 𝑋_𝑖𝑗12 
+𝐸[𝑌ij]= 𝛽0+ 𝛽1 𝑋ij1+𝛽2 𝑋ij2+𝛽3 𝑋ij3+…+𝛽11 𝑋ij11+ 𝛽12 𝑋ij12 
 
 The model allows to investigate the question:
 
-The difference between the mean responses of males and females is E[Yij|Xij12=1]−E[Yij|Xij12=0]=β12, that is adjusted or controlled for time.
+The difference between the mean responses of males and females is E[Yij|Xij12=1]−E[Yij|Xij12=0]=β12, that is adjusted or controlled for time.
 
 
 ```{r}
@@ -229,9 +229,9 @@ ggplot(weight_fit, aes(age, weight)) +
   geom_point(aes(y = pred_agesexinter, col = sex), size = 2) + 
   labs(x = "Age, days", y = "Weight, day", col = "Sex")
 
-````
+```
 
-``
+
 ##Next we will fit  fit parametric curves to our longitudinal data using the actual time value when the measurement was taken. In many studies, the true underlying mean response process changes over time in a relatively smooth, monotonically increasing/decreasing pattern. In our example, we could model the relationship between age and the mean response using a simple linear trend among males and female puppies.
 
 #Then the linear trend model is
@@ -249,7 +249,7 @@ ggplot(weight_fit, aes(age, weight)) +
 lin_agecsexinter <- lmer(weight ~ sex*age + (1 | Id), data = data_dog_weight)
 
 summary(lin_agecsexinter)
-````
+```
 The intercept B0 = 106.103 and is the mean weight among female puppies at age of four days 
 
 The coefficient of sex B1 = -9.456 is the difference between the mean weight of male puppies vs females at age day four. The coefficient of age B2 = 61.937 is the change of the mean response  for every one day increment of age among females.
@@ -276,7 +276,7 @@ ggplot(data = pred_agecsexinter, aes(x = age, y = pred, col = sex)) +
 ```{r}
 lin_agec <- lmer(weight ~ age + (1 | Id), data = data_dog_weight)
 lin_agec
-````
+```
 #Now lets produce a figure that provides graphical representation of the random intercept model.
 #Marginal (overall) mean response over time in the population increases linearly with age (denoted by the solid thick blue line).
 #Conditional mean responses for the two specific individuals are represented with different colored thin solid lines.
@@ -301,7 +301,7 @@ expand.grid(
   labs(x = "Age, days", y = "Weight, g", col = "Curve")
 
 
-````
+```
 ##Random Intercept and slope
 #fit the model
 
@@ -326,7 +326,7 @@ expand.grid(
   geom_line(col = "grey") +
   geom_line(aes(y = marg_pred), col = "blue", lwd = 1.5) +
   labs(x = "Age, days", y = "Weight, g")
-````
+```
 ##And is there any difference between males and females??
 
 ```{r}
@@ -340,7 +340,7 @@ summary(lin_agecsexinterr)
 
 ```{r}
 plot(lin_age, which = 1)  # Residuals vs. Fitted values plot
-````
+```
 
 #Normality of Residuals
 
@@ -352,7 +352,7 @@ plot(lin_age, which = 1)  # Residuals vs. Fitted values plot
 ```{r}
 qqnorm(residuals(lin_age))
 qqline(residuals(lin_age))
-````
+```
 
 ##Plot the residuals against each predictor variable to check for nonlinearity, outliers, or other patterns that may suggest model misspecification.
 
@@ -374,7 +374,7 @@ nested_model <- lm(weight ~ measurement, data = data_dog_weight)
 
 # Perform likelihood ratio test
 anova(full_model, nested_model)
-````
+```
 ##the full model displays a lower value of AIC and of BIC therefore allows for a better fit of the variation of the data and it will allow better predictions
 ---------------------------------------------------------------------------
 ##GEE (Generalized Estimating Equations) focuses on estimating the population-averaged effect. It provides inference about the average effect of covariates on the outcome, considering the correlation structure within subjects.
@@ -406,7 +406,7 @@ anova(full_model, nested_model)
 gee_inter <- geeglm(weight ~ sex*age, data = data_dog_weight,
                     id = Id, family = gaussian, corstr = "exchangeable")
 summary(gee_inter)
-````
+```
 
 ```{r}
 
@@ -421,7 +421,7 @@ summary(gee_inter_ar1)
 gee_inter_unst <- geeglm(weight ~ sex*age, data = data_dog_weight,
                     id = Id, family = gaussian, corstr = "unstructured")
 summary(gee_inter_unst)
-````
+```
 after making the fit with different correlation structures we can make the selection of the “best” correlation structure
 ```{r}
 QIC(gee_inter,gee_inter_ind, gee_inter_ar1,gee_inter_unst)
@@ -452,7 +452,7 @@ ggplot(pred_geeinter, aes(x, predicted, col = group)) +
 ##GLMMs are typically estimated using maximum likelihood estimation (MLE) methods, such as restricted maximum likelihood (REML) or Laplace approximation. The estimation involves finding the parameter estimates that maximize the likelihood of the observed data, considering both fixed and random effects
 ```{r}
 ## read in the dataset the response variable is of type binomial, it has repeated measurements per individual and information of presence or absence of amenorrhea while in reaction to treatment (dose variable) 
-data_raw <- read.table("/Users/andreiafonseca/Documents/Curso_Physalia_Longitudinal_data/Rnotebooks/data_for_GLMM.txt", header=TRUE, sep="\t")
+data_raw <- read.table("/Users/andreiafonseca/Documents/Curso_Physalia_Longitudinal_data/Rnotebooks/data_for_GLMM.txt", header=TRUE, sep="\t") #here you need to change the code to your file path
 
 data_raw$amenorrhea<-as.numeric(data_raw$amenorrhea)
 
@@ -471,7 +471,7 @@ data_long <- data_raw %>%
   dplyr::arrange(id, time)
 str(data_long)
 
-````
+```
 
 
 ##first lets check some summary statistics 
@@ -515,7 +515,7 @@ data_summary %>%
 ##so here we can see how the presence of amenorrhea changes with the time, with more dosages, de prevalence is higher
 ##we can also plot it as a line
 
-````{r}
+```{r}
 data_summary %>% 
   ggplot(aes(x = occasion,
              y = M,
@@ -540,7 +540,7 @@ data_summary %>%
                                 "Third",
                                 "Fourth"))
 
-````
+```
 
 ### so now that we see the trend of our observations lets try to fit models so that we can obtain coefficents to develop predictions in the future
 
@@ -561,7 +561,7 @@ fit_2 <- lme4::glmer(amenorrhea ~ time + dose + (1 | id),
                      family = binomial(link = "logit"))
 
 fit_2
-````
+```
 ##Should we select the model with interaction or not?
 
 We will use the anova to compare bothe models. The result with retrieve the estimation of the  Akaike information criterion (AIC) that is a mathematical method for evaluating how well a model fits the data from which it was generated. In statistics, AIC is used to compare different possible models and determine which one is the best fit for the data. AIC is calculated from:
@@ -572,7 +572,7 @@ The best-fit model according to AIC is the one that explains the greatest amount
 
 ```{r}
 anova(fit_1, fit_2)
-````
+```
 ###No, the AIC and BIC values are smaller for the model without the interaction. The model without the interaction fits better
 
 Now lets see model parameter tables, with the code bellow we can compare the models with and without the interaction between time and dose
@@ -585,7 +585,7 @@ texreg::knitreg(list(fit_1, fit_2),
                 custom.model.names = c("with", "without"),
                 single.row = TRUE,
                 caption = "MLM Parameter Estimates: Inclusion of Interaction (SE and p-values)")
-````
+```
 ##we can as before visualize the model
 
 As our response variable is a discrete variable that involves a finite set of possible values with gaps between values, the prediction would be a Likert scale data.
@@ -600,7 +600,7 @@ interactions::interact_plot(model = fit_2,
                             outcome.scale = "link",
                             y.label = "Likert Scale for Ammenorea")
                 
-````
+```
 scale= probability --> plot the predicitions based in scale of the probabilities of our model
 
 ```{r}
@@ -641,7 +641,7 @@ effects::Effect(focal.predictors = c("dose", "time"),
                                 "Second",
                                 "Third",
                                 "Fourth"))
-````
+```
 ##exercise
 
 which of the these models would you choose for your data?
