@@ -1,0 +1,135 @@
+---
+title: "Analysis_outliers and influencers"
+output: html_document
+date: "2023-06-29"
+author: "Andreia J. Amaral"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+library(car)
+```
+
+## Identifying outliers and influencer values
+
+In this R notebook we discuss metrics and R functions for the detection of outlier and influencer data points
+
+There are three types of "ways" in which data points my stand out from the remaining:
+
+- Leverage points: a data point that is very different in its predictor behavior than the rest if the data. In terms of regression it means that it’s x-value is much higher or lower than the predictor mean
+
+-Discrepancy points – When a point has unsual Y-value in comparison with the X-value. This is an outlier in the regression framework
+
+-Influencer points – The influence of a single data is determined by the relation Leverage x Discrepancy. An influencer point has high discrepancy and high leverage
+
+## Read data and Measure Leverage
+
+The first assessment that we will make is of "LEVERAGE"
+For that we start by reading the following data set diagnosts_examples.txt
+
+The diagnostic measure of Leverage is the HAT VALUE, which is the distance to the mean of the predictor (mean(X)) for each individual predictor point (Xi). The standardized version of this distance is called the hat-value.
+
+```{r}
+
+toy_data<-read.table("/Users/andreiafonseca/Documents/Curso_Physalia_Longitudinal_data/diagnostics_examples.txt", header=T, sep="\t")
+
+toy_data
+
+
+# distance to mean of point 8
+numerator = (toy_data$Nclinics[8] - mean(toy_data$Nclinics))**2
+
+# distance to mean of all the other points
+denominator = sum((toy_data$Nclinics - mean(toy_data$Nclinics))**2)
+n=8
+# putting it together
+h_8 = 1/n+numerator/denominator
+
+h_8 # h_8=0.969 which very high very close to 1 the maximum value
+
+# fitting linear model
+mod_surviving = lm(Surviving~Nclinics, data=toy_data)
+
+# getting hatvalues and printing them
+hs = hatvalues(mod_surviving)
+as.numeric(hs)
+```
+## Assessing discrepancy 
+
+Points that do not have a good fit to the linear regression line are considered outliers or are points with high discrepancy
+Diagnostic measure: studentized residuals
+
+Studentized residuals are calculated by fitting a model without the case for which the residual is calculated, and then scaling the resulting residual (Ei) by an estimate of the standard deviation of the residuals (SE(−i)) and the point's hat value.
+
+E*i= Ei/SE(-i)* sqrt(1-hi)
+
+
+```{r}
+##assessing discrepancy
+
+# Extract the residuals from the linear regression model
+residuals <- resid(mod_surviving)
+
+# Plot Clinics vs Residuals
+plot(toy_data$Nclinics, residuals,
+     xlab = "Clinics", ylab = "Residuals",
+     main = "Clinics vs Residuals", pch = 16)
+
+# Calculate studentized residuals using rstudent function
+student_resid <- rstudent(mod_surviving)
+
+# Plot Clinics vs Studentized Residuals
+plot(toy_data$Nclinics, student_resid,
+     xlab = "Clinics", ylab = "Studentized Residuals",
+     main = "Clinics vs Studentized Residuals", pch = 16)
+```
+
+##Assessing influence
+
+Points with high leverage and high discrepancy have high influence
+
+Diagnostic measures are:
+    1. Cook’s d
+    2. DFFITS: scales the studentized residual by the corresponding hat value
+Both require the hat value and the studentized resildual
+
+```{r}
+##accessing influence
+
+#estimate DFFIT for all data points
+as.numeric(dffits(mod_surviving))
+
+#estimate COOKS DISTANCE for all data points
+as.numeric(cooks.distance(mod_surviving))
+
+# plot these parameters and visualize
+influencePlot(mod_surviving)
+
+# Calculate hat values and studentized residuals
+hat_values <- hatvalues(mod_surviving)
+student_resid <- rstudent(mod_surviving)
+
+# Create a data frame with hat values and studentized residuals
+df <- data.frame(Hat_Values = hat_values, Studentized_Residuals = student_resid)
+
+# Create the scatter plot using ggplot and plt hat values and studentized residuals
+ggplot(df, aes(x = Hat_Values, y = Studentized_Residuals)) +
+  geom_point() +
+  xlab("Hat Values") +
+  ylab("Studentized Residuals") +
+  ggtitle("Hat Values vs Studentized Residuals")
+
+
+
+```
+
+## Exercise
+
+what about checking these parameters to your data?
+
+```{r}
+###put your code here
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
