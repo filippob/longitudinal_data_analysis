@@ -61,4 +61,4 @@ As a general rule, we'll have a longer break (30 minutes) at about 17:00 and two
  - Lab 11: Parametric curves and prediction of random effects in R
 
  - Lecture 9: Model diagnostics
-     [Lecture 9](https://drive.google.com/file/d/1wwsx1Ij69i5ks8uFwuMWJKTScN2qxrPU/view?usp=share_link)       
+     - [Lecture 9](https://drive.google.com/file/d/1wwsx1Ij69i5ks8uFwuMWJKTScN2qxrPU/view?usp=share_link)       
