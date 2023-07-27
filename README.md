@@ -50,15 +50,17 @@ As a general rule, we'll have a longer break (30 minutes) at about 17:00 and two
 
  - Lecture 8: Introduction to Linear Mixed Models
    - [Lecture 8](https://drive.google.com/file/d/11L_T8neUN_BiqeknNuClT9kBy8nlxuxC/view?usp=share_link)
+   - [R code for Day 3](day_3/Day3_lab8_start.Rmd) 
  - Lab 8: Linear Mixed Models
-     - [Lab_8_slides](https://github.com/filippob/longitudinal_data_analysis/blob/main/slides/Day3_Lab8.pdf) 
-     - [8.1 Day3_Analysis_Lab8-Lab11](https://github.com/filippob/longitudinal_data_analysis/blob/main/day_3/Day3_lab8_start.Rmd)
+     - [Lab_8_slides]()
        
  - Lab 9: Testing for the effects of variables in R
-     - [Lab_9_slides](https://github.com/filippob/longitudinal_data_analysis/blob/main/slides/Day3_lab9.pdf)
+     - [Lab_9_slides]()
 
  - Lab 10: Group effect and Interaction between time and group in R
+    - [Lab_10_slides]()    
  - Lab 11: Parametric curves and prediction of random effects in R
+   - [Lab_11_slides]()
 
  - Lecture 9: Model diagnostics
      - [Lecture 9](https://drive.google.com/file/d/1wwsx1Ij69i5ks8uFwuMWJKTScN2qxrPU/view?usp=share_link)       
