@@ -72,4 +72,9 @@ As a general rule, we'll have a longer break (30 minutes) at about 17:00 and two
    - [Lecture GLMM](https://drive.google.com/file/d/1JXH1I1PhXCUxD7HGZVezvMC2rfn4zSdf/view?usp=share_link)
  
   **Day 4**
+
+- Lab 12: Continuation Model diagnosis
+- 
+- Lab 15: GLM and GLMM in the framework of gene expression and analysis of time series experiments
+- Lab 16: Endemic-epidemic modelling for infectious disease counts 
   
