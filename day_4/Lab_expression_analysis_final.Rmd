@@ -1,0 +1,255 @@
+---
+title: "Lab15"
+output: html_document
+date: "2023-06-29"
+author: "Andreia Amaral"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Create a dummy dataset with gene set counts
+
+
+```{r}
+# Load the DESeq2 package
+library(DESeq2)
+
+# Set the seed for reproducibility
+set.seed(123)
+
+# Define the number of genes, patients, time points, and genotypes
+num_genes <- 500
+num_patients <- 40
+num_disease <- 20
+num_healthy <- 20
+num_timepoints <- 10
+num_genotypes <- 2
+num_samples <- num_patients * num_timepoints
+
+# Generate random gene counts for patients at each time point
+gene_counts <- matrix(rnbinom(num_genes * num_samples, mu = 100, size = 1), ncol = num_samples)
+
+# Create a DataFrame with gene counts
+counts_df <- as.data.frame(gene_counts)
+
+# Assign unique gene IDs to the rows
+row.names(counts_df) <- paste0("Gene", 1:num_genes)
+
+# Create a DataFrame to store sample information
+sample_info <- data.frame(
+  Sample = paste0("Sample", 1:num_samples),
+  Patient = rep(paste0("Patient", 1:num_patients), each = num_timepoints),
+  Time = rep(1:num_timepoints, times = num_patients),
+  Genotype = rep(LETTERS[1:num_genotypes], each = num_samples / num_genotypes)
+)
+
+# Assign disease and healthy labels to the patients
+disease_patients <- sample(paste0("Patient", 1:num_patients), size = num_disease)
+sample_info$Group <- ifelse(sample_info$Patient %in% disease_patients, "Disease", "Healthy")
+
+```
+
+#Now we must create a design matrix for the models that we need to fit. DESEQ fit a Generalized Linear Model, not allowing randomization of co-factors, so only allows fixed effects.
+
+
+
+```{r}
+
+# Create a design matrix, short model and long model to test for time effect if the long model that includes interaction between time and group fits better
+design_matrix_short <- model.matrix(~ Time + Group, data = sample_info)
+
+design_matrix_long <- model.matrix(~ Time + Group+ Time:Group, data = sample_info)
+
+
+# Create the DESeqDataSet object
+dds <- DESeqDataSetFromMatrix(countData = counts_df, colData = sample_info, design = design_matrix_long)
+
+dds<-DESeq(dds)
+
+#perform Log Likelihood ratio test, to determine if the log model is more likely than the short model
+
+dds_lrt_time <- DESeq(dds, test="LRT", reduced = design_matrix_short)
+
+
+# Run the differential expression analysis for time and group and for the time effect
+
+
+results_lrt <- results(dds_lrt_time)
+
+# Select DGEs based on adjusted p-value threshold
+alpha <- 0.10  # Adjusted p-value threshold
+
+# Subset results based on the adjusted p-value threshold
+
+
+significant_results_lrt <- subset(results_lrt, padj < alpha)
+# Get the gene names of the significant results
+
+significant_genes_lrt <- rownames(significant_results_lrt)
+significant_genes_lrt
+
+```
+#Now lets visualize our results, lets start with diagnostic plots 
+
+The MA
+
+```{r}
+
+# Diagnostic plots
+plotMA(results(dds_lrt_time))
+
+```
+
+##The evaluation of dispersion allows to detect outliers
+
+```{r}
+plotDispEsts(dds_lrt_time)
+
+
+```
+Plot gene expression values in an hierarchical mode 
+
+
+```{r}
+#option one generate log2- trasnformed counts and use it for heatmap
+# Generate log2-transformed gene counts using rlog
+log2_counts <- rlog(dds_lrt_time, blind = FALSE)
+# Convert the log2 counts to a numeric matrix
+heatmap_data_lrt <- as.matrix(log2_counts[significant_genes_lrt, ])
+
+
+#option2 - Generate variance-stabilized transformed counts using vst, in this case we have a small number of genes so we have to use option 3
+vst_counts <- vst(dds, blind = FALSE)
+
+# Convert the vst counts to a numeric matrix
+heatmap_data_lrt <- as.matrix(vst_counts[significant_genes_lrt, ])
+
+# option 3  use the varianceStabilizingTransformation funtion directly
+
+vst_transform <- varianceStabilizingTransformation(dds)
+
+# Access the variance-stabilized transformed counts as a numeric matrix
+vst_counts <- assay(vst_transform)
+
+# Convert the vst counts to a numeric matrix
+heatmap_data_lrt <- as.matrix(vst_counts[significant_genes_lrt, ])
+
+
+
+
+# Create the heatmap
+#heatmap(heatmap_data, scale = "row", main = "Differentially Expressed Genes Heatmap")
+
+heatmap(heatmap_data_lrt, scale = "row", main = "Differentially Expressed Genes Heatmap")
+
+```
+
+
+
+```{r}
+
+# Create the heatmap
+heatmap(heatmap_data_lrt, scale = "row", main = "Differentially Expressed Genes Heatmap")
+
+```
+
+
+##create a nicer heatmap with genotype and group assignment
+
+```{r}
+
+library("pheatmap")
+select <- order(rowMeans(counts(dds_lrt_time,normalized=TRUE)),
+                decreasing=TRUE)[1:20]
+                
+ntd <- normTransform(dds_lrt_time)
+     df <- as.data.frame(colData(dds_lrt_time)[,c("Group","Genotype")])
+pheatmap(assay(ntd)[select,], cluster_rows=FALSE, show_rownames=FALSE,        cluster_cols=FALSE, annotation_col=df)
+
+```
+As agreed I am proding here the code to apply the model for the time effect as in Day3 lab9 for count data. More tutorials can be found here:
+
+https://github.com/stop-pre16/lmerSeq
+
+```{r}
+
+#analysis time series including random effect
+library(lmerSeq)
+library(nlme)
+
+
+
+dat <- readRDS('cs_dataset.RDS')
+
+sample_data <- dat$sample_data
+head(sample_data)
+counts <- dat$counts
+head(counts[,1:5])
+
+# Normalize the filtered data using DESeq2's VST
+dds <- DESeqDataSetFromMatrix(countData = counts,
+                                  colData = sample_data,
+                                  design = ~ time)
+dds <- DESeq(dds)
+vsd.fixed <- varianceStabilizingTransformation(dds, blind=F)
+vst_expr <- assay(vsd.fixed)
+
+# next we fit the same model as in Day3 Lab 9 we will want to test if the coeeficients in each time point are equal
+fit.lmerSeq <- lmerSeq.fit(form = ~ time + (1|patient),
+                            expr_mat = vst_expr,
+                            sample_data = sample_data,
+                            REML = T)
+
+summary (fit.lmerSeq[[1]]$fit)
+# Look at lmerSeq.fit object
+class(fit.lmerSeq)
+#> [1] "list"
+#Length is number of genes
+length(fit.lmerSeq) 
+#> [1] 13123
+# Names for individual element
+names(fit.lmerSeq[[1]])
+#> [1] "fit"  "gene"
+#Look at the fixed effects design matrix to develop the contrast_mat
+
+head(model.matrix(fit.lmerSeq[[1]]$fit))
+
+contrasts=list(
+  c1 = c(0,1,0),
+  c2 = c(0,0,1),
+  c3 = c(0,-1,1)
+) 
+
+# Test each contrast separately using an lapply statement
+all_contrasts=lapply(contrasts, function(contrast){
+      test=lmerSeq.contrast(fit.lmerSeq, contrast=rbind(contrast),sort_results = F)
+      test
+    })
+
+
+##To perform a multiple degree of freedom F-test (for any changes in expression over time), the following code can be used:
+ ##  F-test for for all coefficients
+ cont_mat2 <- rbind(c(0, 1, 0),
+                    c(0, 0, 1)) 
+ contrast_summary2 <- lmerSeq.contrast(lmerSeq_results = fit.lmerSeq,
+                                       contrast_mat = cont_mat2,
+                                       p_adj_method = 'BH',
+                                       ddf = 'Satterthwaite',
+                                       sort_results = T)
+ 
+  
+
+ # Number of DEGs
+table(contrast_summary2$summary_table$p_val_adj < 0.05)
+
+
+
+  
+  
+```
+
+
+```
+
