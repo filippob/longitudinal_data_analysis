@@ -74,7 +74,7 @@ As a general rule, we'll have a longer break (30 minutes) at about 17:00 and two
   **Day 4**
 
 - Lab 12: Continuation Model diagnosis
-- 
+- [Model diagnostics](day_4/Lab12_diagnostics.Rmd)
 - Lab 15: GLM and GLMM in the framework of gene expression and analysis of time series experiments
 - Lab 16: Endemic-epidemic modelling for infectious disease counts 
   
