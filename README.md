@@ -3,7 +3,7 @@ Scripts for the analysis of longitudinal data in R
 
 **Material for the Course "Introduction to the analysis of longitudinal data with R"**
 
-Instructors: *Filippo Biscarini, Andreia Amaral*
+Instructors: *Filippo Biscarini, Nelson Nazzicari*
 
 This course will introduce students, researchers and professionals to the analysis of longitudinal data, i.e. data with a time component. The course will describe the main types of longitudinal data (e.g. treatments over timepoints, time series data), and a number of approaches to process and analyse such data.
 
