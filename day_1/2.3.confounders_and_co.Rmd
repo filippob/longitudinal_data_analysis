@@ -1,0 +1,57 @@
+---
+title: "Confounders, colliders, mediators"
+author: "Filippo Biscarini"
+date: "2024-11-04"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library("broom")
+library("simstudy")
+library("gridExtra")
+library("tidyverse")
+library("data.table")
+
+# library(epiR)
+# library(tableone)
+# library(ipw)
+# library(sandwich) #for robust variance estimation
+# library(survey)
+# library(haven)
+# library(EValue)
+```
+
+## Confounders
+
+**confounders** vs **counterfactuals**
+
+[here for a fun intuition on counterfactuals](https://www.youtube.com/watch?v=0lpY0Kt4bn8)
+
+
+### Simulation
+
+We simulate some data:
+
+- binary confounder `C`, either present or absent in 40% of the records
+- a causal effect `X` (binary: exposed / non-exposed), that depends on `C`
+- random errors `e`, sampled from a Gaussian distribution ($\mu = 0$, $\sigma^2 = 2$)
+- 
+
+```{r cars}
+def <- defData(varname = "C", formula = 0.4, dist = "binary")
+def <- defData(def, "X", formula = "0.3 + 0.4 * C", dist = "binary")
+def <- defData(def, "e", formula = 0, variance = 2, dist = "normal")
+def <- defData(def, "Y0", formula = "2 * C + e", dist="nonrandom")
+def <- defData(def, "Y1", formula = "1 + 2 * C + e", dist="nonrandom")
+def <- defData(def, "Y_obs", formula = "Y0 + (Y1 - Y0) * X", dist = "nonrandom") #  = Y1*X + (1-X)*Y0
+
+set.seed(127)
+dt <- genData(1000, def)
+```
+
+### Solutions
+
+Confounding control can occur at the design stage through randomization, restriction or matching. At the analysis stage, confounding control can be managed by standardization, stratification or standard multivariable regression. Limitations in these methods have lead to the advancement of newer approaches including structural causal models or directed acyclic graphs (DAGs), propensity scores, marginal structural models with inverse probability weighting, and quasi experimental methods such as instrumental variables.
+
