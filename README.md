@@ -48,35 +48,8 @@ As a general rule, we'll have a longer break (30 minutes) at about 17:00 and two
  
 **Day 3**
 
- - Lecture 8: Introduction to Linear Mixed Models
-   - [Lecture 8](https://drive.google.com/file/d/11L_T8neUN_BiqeknNuClT9kBy8nlxuxC/view?usp=share_link)
-   - [R code for Day 3](day_3/Day3_lab8_start.Rmd) 
- - Lab 8: Linear Mixed Models
-     - [Lab_8_slides](https://drive.google.com/file/d/1r-YGWPoDEAFcsH9l7dGjSREhc7lr_IDu/view?usp=share_link)
-       
- - Lab 9: Testing for the effects of variables in R
-     - [Lab_9_slides](https://drive.google.com/file/d/1E5FRAzyP8obKl7NlGESm5nUXypvb3SBd/view?usp=share_link)
 
- - Lab 10: Group effect and Interaction between time and group in R
-    - [Lab_10_slides](https://drive.google.com/file/d/1uSVs1aQNllTjmeQEodZjxL1IXLoV319Y/view?usp=sharing)    
- - Lab 11: Parametric curves and prediction of random effects in R
-   - [Lab_11_slides](https://drive.google.com/file/d/1KlNA0zQbV9y8ytGuqoRZ10d8Ry0Gg5hf/view?usp=sharing)
-
- - Lab 12: Model diagnostics
-     - [Lecture 9](https://drive.google.com/file/d/1wwsx1Ij69i5ks8uFwuMWJKTScN2qxrPU/view?usp=share_link)
-
-- Lab 13: Generalized Estimation Equations (GEE)
-    - [Lab_13_slides](https://drive.google.com/file/d/1Qyp4kfuZ_IFfYOeqy0f1O_feZvqSHsTU/view?usp=share_link)
-
-- Lab 14: Generalized Linear Mixed Models (GLMM)
-   - [Lecture GLMM](https://drive.google.com/file/d/1JXH1I1PhXCUxD7HGZVezvMC2rfn4zSdf/view?usp=share_link)
  
-  **Day 4**
+**Day 4**
 
-- Lab 12: Continuation Model diagnosis
-    - [Model diagnostics](day_4/Lab12_diagnostics.Rmd)
-- Lab 15: GLM and GLMM in the framework of gene expression and analysis of time series experiments
-    - [Analysis of time effect, GLM and GLMM](day_4/Lab_expression_analysis_final.Rmd) 
-- Lab 16: Endemic-epidemic modelling for infectious disease counts
-    - [hhh4]()
   
