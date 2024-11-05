@@ -3,6 +3,9 @@ title: "Confounders, colliders, mediators"
 author: "Filippo Biscarini"
 date: "2024-11-04"
 output: html_document
+editor_options: 
+  markdown: 
+    wrap: 72
 ---
 
 ```{r setup, include=FALSE}
@@ -27,31 +30,34 @@ library("data.table")
 
 ## Confounders
 
-**confounders** vs **counterfactuals**
-
-[here for a fun intuition on counterfactuals](https://www.youtube.com/watch?v=0lpY0Kt4bn8)
-
-A **confounder** is associated with a predictor variable (X) and also with the response variable (Y);
-the confounder is not part of the causal/association pathway between predictor(s) and response.
+A **confounder** is associated with a predictor variable (X) and also
+with the response variable (Y); the confounder is not part of the
+causal/association pathway between predictor(s) and response.
 
 With confounding:
 
-1. the model may be missing an important predictor $\rightarrow$ reduced power of inference and prediction
-2. some predictors may show high variance
-3. the model may be biased
-4. the model may be invalid
-5. detected associations/relationships may be spurious 
+1.  the model may be missing an important predictor $\rightarrow$
+    reduced power of inference and prediction
+2.  some predictors may show high variance
+3.  the model may be biased
+4.  the model may be invalid
+5.  detected associations/relationships may be spurious
 
 ### Simulation
 
 We simulate some data:
 
-- the true causal effect (difference between exposed and not exposed records) is simulated to be `1`
-- binary confounder `C` of magnitude 2, either present or absent in 40% of the records
-- a causal effect `X` (binary: exposed / non-exposed), that depends on `C`
-- random errors `e`, sampled from a Gaussian distribution ($\mu = 0$, $\sigma^2 = 2$)
-- `Y0` and `Y1` are the potential outcome, for each record, of being both exposed and not exposed 
-- `Y_obs`: is the actual observations
+-   the true causal effect (difference between exposed and not exposed
+    records) is simulated to be `1`
+-   binary confounder `C` of magnitude 2, either present or absent in
+    40% of the records
+-   a causal effect `X` (binary: exposed / non-exposed), that depends on
+    `C`
+-   random errors `e`, sampled from a Gaussian distribution ($\mu = 0$,
+    $\sigma^2 = 2$)
+-   `Y0` and `Y1` are the potential outcome, for each record, of being
+    both exposed and not exposed
+-   `Y_obs`: is the actual observations
 
 ```{r cars}
 ## simstudy
@@ -83,51 +89,64 @@ Check the proportion of confounded records (expected value = 0.40):
 paste0("The percentage of the population with confounder C  = ", sum(dt[,C])/ nrow(dt))
 ```
 
-Check the proportion of exposed records (expected value = 0.30 + 0.40*C = 0.3 + 0.4*0.38 = 0.452):
+Check the proportion of exposed records (expected value = 0.30 + 0.40*C
+= 0.3 + 0.4*0.38 = 0.452):
 
 ```{r}
 paste0("The percentage of the population exposed to treatment/effect X = ", sum(dt[,X])/ nrow(dt))
 ```
 
-Calculate the expected observed difference between exposed and non-exposed records (in presence of confounding):
+Calculate the expected observed difference between exposed and
+non-exposed records (in presence of confounding):
 
 ```{r}
 paste0("Calculated observed difference  = ", round(dt[X == 1, mean(Y_obs)] - dt[X == 0, mean(Y_obs)],2))
 ```
 
-The observed difference is not equal to the true effect size of the exposure due to the presence of the confounder C. 
-The expected observed difference is given by the true effect size (1.0) + the confounding bias (40%*2 =.8) = 1.8 
-(which is very close to the actual calculated difference between exposed and non-exposed records).
+The observed difference is not equal to the true effect size of the
+exposure due to the presence of the confounder C. The expected observed
+difference is given by the true effect size (1.0) + the confounding bias
+(40%\*2 =.8) = 1.8 (which is very close to the actual calculated
+difference between exposed and non-exposed records).
 
-With simple linear regression we indeed obtain an estimated effect of 1.84: 
+With simple linear regression we indeed obtain an estimated effect of
+1.84:
 
 ```{r}
 lm(Y_obs ~ X, data = dt) |> tidy()
 ```
-Adding the confounder to the model adjusts for the bias and returns the correct estimates for both the exposure (1.0) and the confounder bias (2.0):
+
+Adding the confounder to the model adjusts for the bias and returns the
+correct estimates for both the exposure (1.0) and the confounder bias
+(2.0):
 
 ```{r}
 lm1 <- lm(Y_obs ~ X + C, data = dt)
 tidy(lm1)
 ```
 
-**Question: if this is so easy (just adding a systematic effect to the model), why do we worry so much about confounding?**
+**Question: if this is so easy (just adding a systematic effect to the
+model), why do we worry so much about confounding?**
 
 ### Example with risk ratios
 
-Retrospective cohort study: patients with high or low cholesterol, monitored for 12 months and then assessed for all-cause mortality (death).
-The amount of **exercise during the 12-month period of follow-up** is a potential confounder: it associated with both blood cholesterol and death
-(e.g. more physical exercise $\rightarrow$ lower cholesterol and lower death rate), and it is not in the causal path
+Retrospective cohort study: patients with high or low cholesterol,
+monitored for 12 months and then assessed for all-cause mortality
+(death). The amount of **exercise during the 12-month period of
+follow-up** is a potential confounder: it associated with both blood
+cholesterol and death (e.g. more physical exercise $\rightarrow$ lower
+cholesterol and lower death rate), and it is not in the causal path
 between blood cholesterol and risk death.
 
-![confounder_example](confounder.jpeg)
-<span>Figure from: https://rpubs.com/mbounthavong/confounding_interaction</span>
+![confounder_example](confounder.jpeg) Figure from:
+<https://rpubs.com/mbounthavong/confounding_interaction>
 
+We have 250 deaths out of 2250 subjects with high blood cholesterol
+(250/2250 = 11.1%), and 150 deaths out of 1650 subjects with low blood
+cholesterol (150/1650 = 9.1%).
 
-We have 250 deaths out of 2250 subjects with high blood cholesterol (250/2250 = 11.1%), 
-and 150 deaths out of 1650 subjects with low blood cholesterol (150/1650 = 9.1%).
-
-<span style="color:red">Is there a higher risk of death with higher blood cholesterol levels?</span> 
+[Is there a higher risk of death with higher blood cholesterol
+levels?]{style="color:red"}
 
 ```{r}
 ## contingency table
@@ -137,10 +156,15 @@ colnames(Table1) <- c("death", "survival")
 print(Table1)
 ```
 
-To compare the risk of death in the two exposure groups (high/low blood cholesterol), we can estimate the risk ratio (RR) and odds ratio (OR):
+To compare the risk of death in the two exposure groups (high/low blood
+cholesterol), we can estimate the risk ratio (RR) and odds ratio (OR):
 
-- $ RR = \frac{\text{high-chol-deaths}/\text{all-high-chol}}{\text{low-chol-deaths}/\text{all-low-chol}} $
-- $ OR = \frac{\text{high-chol-deaths}/\text{high-chol-survs}}{\text{low-chol-deaths}/\text{low-chol-survs}} $
+-   \$ RR =
+    \frac{\text{high-chol-deaths}/\text{all-high-chol}}{\text{low-chol-deaths}/\text{all-low-chol}}
+    \$
+-   \$ OR =
+    \frac{\text{high-chol-deaths}/\text{high-chol-survs}}{\text{low-chol-deaths}/\text{low-chol-survs}}
+    \$
 
 (The 95% Confidence Intervals are also estimated)
 
@@ -153,17 +177,21 @@ riskratio.wald(Table1, rev = c("both"))
 oddsratio.wald(Table1, rev = c("both"))
 ```
 
-Subjects with *High Cholesterol* have a 22% higher risk of death compared to Low Cholesterol subjects 
-(RR = 1.22; 95% CI: [1.01 - 1.48]; p-value = 0.040).
+Subjects with *High Cholesterol* have a 22% higher risk of death
+compared to Low Cholesterol subjects (RR = 1.22; 95% CI: [1.01 - 1.48];
+p-value = 0.040).
 
-Subjects with *High Cholesterol* have a 25% increase in the odds of death compared to Low Cholesterol subjects 
-(OR = 1.25; 95% CI: [1.01, 1.55]; p-value = 0.040).
+Subjects with *High Cholesterol* have a 25% increase in the odds of
+death compared to Low Cholesterol subjects (OR = 1.25; 95% CI: [1.01,
+1.55]; p-value = 0.040).
 
-From this analysis, the association between blood cholesterol and risk of death is significant.
+From this analysis, the association between blood cholesterol and risk
+of death is significant.
 
 #### Confounding?
 
-1. Is there **association between the confounder (exercise) and the response (risk of death)**?
+1.  Is there **association between the confounder (exercise) and the
+    response (risk of death)**?
 
 ```{r}
 Table2 <- matrix(c(200, 200, 2400, 1100), nrow = 2, ncol= 2)
@@ -182,7 +210,8 @@ writeLines(" - p-value")
 res$p.value
 ```
 
-2. Is there **association between the confounder (exercise) and the exposure (blood cholesterol)**?
+2.  Is there **association between the confounder (exercise) and the
+    exposure (blood cholesterol)**?
 
 ```{r}
 ### Criterion 2: The confounding variable (Exercise) is associated with the Cholesterol Status (Is exercise associated with cholesterol?)
@@ -202,11 +231,13 @@ writeLines(" - p-value")
 res$p.value
 ```
 
-We see that `exercise` is associated with both the outcome and the exposure and, since it is not in the causal pathway
-between blood cholesterol and risk of death, we can rightfully consider it to be a confounder!
+We see that `exercise` is associated with both the outcome and the
+exposure and, since it is not in the causal pathway between blood
+cholesterol and risk of death, we can rightfully consider it to be a
+confounder!
 
-We can estimate the size of the confounding effect using **stratification analysis**:
-exercise vs no exercise.
+We can estimate the size of the confounding effect using
+**stratification analysis**: exercise vs no exercise.
 
 ##### Stratum 1: subjects who do exercise
 
@@ -218,7 +249,6 @@ rownames(Table4) <- c("high-chol", "low-chol")
 colnames(Table4) <- c("death", "survival")
 Table4
 ```
-
 
 ```{r}
 res <- oddsratio.wald(Table4, rev = c("both"))
@@ -250,18 +280,23 @@ writeLines(" - p-value")
 res$p.value
 ```
 
-Compared to the crude analysis where the OR = 1.25 (and the RR = 1.22), the stratified results are much higher.
-This suggests that `Exercise` has a confounding effect on the relationship between blood cholesterol and risk of death. 
-When we stratify by exercise, we get a stronger measure of association between `X` and `Y`. 
+Compared to the crude analysis where the OR = 1.25 (and the RR = 1.22),
+the stratified results are much higher. This suggests that `Exercise`
+has a confounding effect on the relationship between blood cholesterol
+and risk of death. When we stratify by exercise, we get a stronger
+measure of association between `X` and `Y`.
 
-It would be convenient to have a way to get an estimate of the X-Y association adjusted for confounding, without having to go through the complications of the stratified analysis: this is the **Mantel-Haenszel (M-H)** metric, obtained by summing over strata:
+It would be convenient to have a way to get an estimate of the X-Y
+association adjusted for confounding, without having to go through the
+complications of the stratified analysis: this is the **Mantel-Haenszel
+(M-H)** metric, obtained by summing over strata:
 
 $$
 \text{OR_{M-H adjusted}} = \left( \sum_{k=1}^K \frac{(a_k \cdot d_k)/ n_k}{(c_k \cdot b_k) / n_k} \right) \cdot \frac{1}{K}
 $$
 
-where $a,b,c,d$ are the cells of the contingency table: a: high-chol deaths; b: high-chol survs;
-c: low-chol deaths; d: low-chols survs.
+where $a,b,c,d$ are the cells of the contingency table: a: high-chol
+deaths; b: high-chol survs; c: low-chol deaths; d: low-chols survs.
 $n_k$ is the total number of records in each stratum $k$.
 
 ```{r}
@@ -274,30 +309,56 @@ or_mh = ( ((150*800)/2600)/((50*1600)/2600) + ((100*700)/1300)/((100*400)/1300) 
 or_mh = ( (150*800)/(50*1600) + (100*700)/(100*400) ) / 2 ## simplifying the total number of observations in the expression 
 ```
 
-All these calculations can be done more easily using the `epi.2by2()` function from the `epiR` package:
+All these calculations can be done more easily using the `epi.2by2()`
+function from the `epiR` package:
 
 ```{r}
 epi.2by2(matrix.array)
 ```
 
-<span style="color:red">Better still, one can use a **logistic regression model**, include the confounding effect(s) and then look at the model coefficients to get the adjusted log-odds and odds ratios (and relative risks) for the exposure/treatment under investigation (e.g. OR of one-unit increase in exposure, or of belonging to one class or the other of the exposure).</span>
+[Better still, one can use a **logistic regression model**, include the
+confounding effect(s) and then look at the model coefficients to get the
+adjusted log-odds and odds ratios (and relative risks) for the
+exposure/treatment under investigation (e.g. OR of one-unit increase in
+exposure, or of belonging to one class or the other of the
+exposure).]{style="color:red"}
 
 ### Solutions
 
-Confounding control can occur at the design stage through: 
+Confounding control can occur at the design stage through:
 
-1. randomization: e.g. RCT
-2. restriction: i.e. use only one value of the potential confounder to recruit subjects (e.g. only females)
-3. matching: i.e. match (balance) exposed / non-exposed by values of the confounder
+1.  randomization: e.g. RCT
+2.  restriction: i.e. use only one value of the potential confounder to
+    recruit subjects (e.g. only females)
+3.  matching: i.e. match (balance) exposed / non-exposed by values of
+    the confounder
 
 At the analysis stage, confounding control can be managed by:
 
-1. standardization: e.g. normalize by age, body weight etc. (useful with continuous confounders)
-2. stratification: e.g. stratified analysis (as seen above)
-3. multivariable regression (linear, logistic, cox, etc.): include confounders in the statistical model
+1.  standardization: e.g. normalize by age, body weight etc. (useful
+    with continuous confounders)
+2.  stratification: e.g. stratified analysis (as seen above)
+3.  multivariable regression (linear, logistic, cox, etc.): include
+    confounders in the statistical model
 
-More advanced approaches include: i) structural causal models; ii) directed acyclic graphs (DAGs); iii) propensity scores; 
-iv) marginal structural models with inverse probability weighting; v) quasi experimental methods such as instrumental variables (e.g. Mendelian Randomization in clinical trials).
+More advanced approaches include: i) structural causal models; ii)
+directed acyclic graphs (DAGs); iii) propensity scores; iv) marginal
+structural models with inverse probability weighting; v) quasi
+experimental methods such as instrumental variables (e.g. Mendelian
+Randomization in clinical trials).
 
+#### Time
 
+In longitudinal data, **time** is often a confounder, i.e. a variable
+that affects both the outcome and the exposure (time elapses for all).
+This is often the case with **counterfactuals** (**confounders** vs
+**counterfactuals**: [look here for a fun intuition on
+counterfactuals](https://www.youtube.com/watch?v=0lpY0Kt4bn8)).
 
+Similar considerations may apply to spatial confounding, 
+e.g. a geographical / environmental gradient.
+In this case, **space** can be a potential confounder.
+
+------------------------------------------------------------------------
+
+## Colliders
