@@ -8,6 +8,7 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 
+library("epiR")
 library("broom")
 library("simstudy")
 library("epitools")
@@ -112,7 +113,7 @@ tidy(lm1)
 
 **Question: if this is so easy (just adding a systematic effect to the model), why do we worry so much about confounding?**
 
-#### Example
+### Example with risk ratios
 
 Retrospective cohort study: patients with high or low cholesterol, assessed for all-cause mortality (death).
 The amount of exercise is a potential confounder: it associated with both blood cholesterol and death
@@ -124,24 +125,142 @@ between blood cholesterol and risk death.
 <span>Figure from: https://rpubs.com/mbounthavong/confounding_interaction</span>
 
 
+We have 250 deaths out of 2250 subjects with high blood cholesterol (250/2250 = 11.1%), 
+and 150 deaths out of 1650 subjects with low blood cholesterol (150/1650 = 9.1%).
+
+<span style="color:red">Is there a higher risk of death with higher blood cholesterol levels?</span> 
+
 ```{r}
 ## contingency table
-Table2 <- matrix(c(250, 150, 2000, 1500), nrow = 2, ncol = 2)
+Table1 <- matrix(c(250, 150, 2000, 1500), nrow = 2, ncol = 2)
+rownames(Table1) <- c("high", "low")
+colnames(Table1) <- c("death", "survival")
+print(Table1)
+```
+
+To compare the risk of death in the two exposure groups (high/low blood cholesterol), we can estimate the risk ratio (RR) and odds ratio (OR):
+
+- $ RR = \frac{\text{high-chol-deaths}/\text{all-high-chol}}{\text{low-chol-deaths}/\text{all-low-chol}} $
+- $ OR = \frac{\text{high-chol-deaths}/\text{high-chol-survs}}{\text{low-chol-deaths}/\text{low-chol-survs}} $
+
+(The 95% Confidence Intervals are also estimated)
+
+```{r}
+## from the epitools package
+riskratio.wald(Table1, rev = c("both"))
+```
+
+```{r}
+oddsratio.wald(Table1, rev = c("both"))
+```
+
+Subjects with *High Cholesterol* have a 22% higher risk of death compared to Low Cholesterol subjects 
+(RR = 1.22; 95% CI: [1.01 - 1.48]; p-value = 0.040).
+
+Subjects with *High Cholesterol* have a 25% increase in the odds of death compared to Low Cholesterol subjects 
+(OR = 1.25; 95% CI: [1.01, 1.55]; p-value = 0.040).
+
+From this analysis, the association between blood cholesterol and risk of death is significant.
+
+#### Confounding?
+
+1. Is there **association between the confounder (exercise) and the response (risk of death)**?
+
+```{r}
+Table2 <- matrix(c(200, 200, 2400, 1100), nrow = 2, ncol= 2)
+rownames(Table2) <- c("exercise", "no-exercise")
+colnames(Table2) <- c("death", "survival")
 Table2
 ```
 
-
-Then we can estimate the risk ratio (RR) and odds ratio (OR) using the riskratio.wald() and oddsratio.wald() functions. We will use the Wald method for estimating the 95% CIs.
-
 ```{r}
-riskratio.wald(Table2, rev = c("both"))
+res <- riskratio.wald(Table2, rev = c("both"))
+
+writeLines(" - Estimated risk ratio")
+print(res$measure)
+
+writeLines(" - p-value")
+res$p.value
 ```
 
-Subjects with High Cholesterol had a 22% increase in the risk of Death compared to subjects with Low Cholesterol (RR = 1.22; 95% CI: 1.01, 1.48; P=0.040).
+2. Is there **association between the confounder (exercise) and the exposure (blood cholesterol)**?
 
-Subjects with High Cholesterol had a 25% increase in odds of Death compared to subjects with Low Cholesterol (OR = 1.25; 95% CI: 1.01, 1.55; P=0.040).
+```{r}
+### Criterion 2: The confounding variable (Exercise) is associated with the Cholesterol Status (Is exercise associated with cholesterol?)
+Table3 <- matrix(c(1750, 500, 850, 800), nrow = 2, ncol= 2)
+rownames(Table3) <- c("exercise", "no-exercise")
+colnames(Table3) <- c("high-chol", "low-chol")
+Table3
+```
 
-In both these measures, the association was significant.
+```{r}
+res <- riskratio.wald(Table3, rev = c("both"))
+
+writeLines(" - Estimated risk ratio")
+print(res$measure)
+
+writeLines(" - p-value")
+res$p.value
+```
+
+We see that `exercise` is associated with both the outcome and the exposure and, since it is not in the causal pathway
+between blood cholesterol and risk of death, we can rightfully consider it to be a confounder!
+
+We can estimate the size of the confounding effect using **stratification analysis**:
+exercise vs no exercise.
+
+##### Stratum 1: subjects who do exercise
+
+```{r}
+### Distribution of Exercise across Drug groups
+# Among subjects who exercise (N=2600)
+Table4 <- matrix(c(150, 50, 1600, 800), nrow = 2, ncol = 2)
+rownames(Table4) <- c("high-chol", "low-chol")
+colnames(Table4) <- c("death", "survival")
+Table4
+```
+
+
+```{r}
+res <- riskratio.wald(Table4, rev = c("both"))
+
+writeLines(" - Estimated risk ratio")
+print(res$measure)
+
+writeLines(" - p-value")
+res$p.value
+```
+
+##### Stratum 2: subjects who don't exercise
+
+```{r}
+# Among subjects who do not exercise (N=1300)
+Table5 <- matrix(c(100, 100, 400, 700), nrow = 2, ncol = 2)
+rownames(Table5) <- c("high-chol", "low-chol")
+colnames(Table5) <- c("death", "survival")
+Table5
+```
+
+```{r}
+res <- riskratio.wald(Table5, rev = c("both"))
+
+writeLines(" - Estimated risk ratio")
+print(res$measure)
+
+writeLines(" - p-value")
+res$p.value
+```
+
+Compared to the crude analysis where the RR = 1.22 (and the OR = 1.25), the stratified results are much higher. t
+This suggests that `Exercise` has a confounding effect on the relationship between blood cholesterol and risk of death. 
+When we stratify by exercise, we get a stronger measure of association between `X` and `Y`. 
+
+It would be convenient to have a way to get an estimate of the X-Y association adjusted for confounding, without having to go through the complications of the stratified analysis: this is the **Mantel-Haenszel (M-H)** test/metric.
+
+```{r}
+matrix.array <- array(c(Table4, Table5), dim = c(2, 2, 2))
+epi.2by2(matrix.array)
+```
 
 
 ### Solutions
