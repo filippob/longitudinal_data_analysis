@@ -10,6 +10,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 library("broom")
 library("simstudy")
+library("epitools")
 library("gridExtra")
 library("tidyverse")
 library("data.table")
@@ -29,6 +30,16 @@ library("data.table")
 
 [here for a fun intuition on counterfactuals](https://www.youtube.com/watch?v=0lpY0Kt4bn8)
 
+A **confounder** is associated with a predictor variable (X) and also with the response variable (Y);
+the confounder is not part of the causal/association pathway between predictor(s) and response.
+
+With confounding:
+
+1. the model may be missing an important predictor $\rightarrow$ reduced power of inference and prediction
+2. some predictors may show high variance
+3. the model may be biased
+4. the model may be invalid
+5. detected associations/relationships may be spurious 
 
 ### Simulation
 
@@ -101,7 +112,53 @@ tidy(lm1)
 
 **Question: if this is so easy (just adding a systematic effect to the model), why do we worry so much about confounding?**
 
+#### Example
+
+Retrospective cohort study: patients with high or low cholesterol, assessed for all-cause mortality (death).
+The amount of exercise is a potential confounder: it associated with both blood cholesterol and death
+(e.g. more physical exercise $\rightarrow$ lower cholesterol and lower death rate), and it is not in the causal path
+between blood cholesterol and risk death.
+
+
+![confounder_example](confounder.jpeg)
+<span>Figure from: https://rpubs.com/mbounthavong/confounding_interaction</span>
+
+
+```{r}
+## contingency table
+Table2 <- matrix(c(250, 150, 2000, 1500), nrow = 2, ncol = 2)
+Table2
+```
+
+
+Then we can estimate the risk ratio (RR) and odds ratio (OR) using the riskratio.wald() and oddsratio.wald() functions. We will use the Wald method for estimating the 95% CIs.
+
+```{r}
+riskratio.wald(Table2, rev = c("both"))
+```
+
+Subjects with High Cholesterol had a 22% increase in the risk of Death compared to subjects with Low Cholesterol (RR = 1.22; 95% CI: 1.01, 1.48; P=0.040).
+
+Subjects with High Cholesterol had a 25% increase in odds of Death compared to subjects with Low Cholesterol (OR = 1.25; 95% CI: 1.01, 1.55; P=0.040).
+
+In both these measures, the association was significant.
+
+
 ### Solutions
 
-Confounding control can occur at the design stage through randomization, restriction or matching. At the analysis stage, confounding control can be managed by standardization, stratification or standard multivariable regression. Limitations in these methods have lead to the advancement of newer approaches including structural causal models or directed acyclic graphs (DAGs), propensity scores, marginal structural models with inverse probability weighting, and quasi experimental methods such as instrumental variables.
+Confounding control can occur at the design stage through: i) randomization, ii) restriction or iii) matching. 
+At the analysis stage, confounding control can be managed by: i) standardization, ii) stratification or iii) standard multivariable regression.
+
+More advanced approaches include: i) structural causal models, ii) directed acyclic graphs (DAGs), iii) propensity scores, 
+iv) marginal structural models with inverse probability weighting, and v) quasi experimental methods such as instrumental variables (e.g. Mendelian Randomization in clinical trials).
+
+During experiment design phase:
+- randomization
+- restriction / exclusion
+- matching
+- stratification
+
+During analysis phase:
+- stratified analysis
+- multivariate analysis
 
