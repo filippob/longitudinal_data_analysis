@@ -115,11 +115,10 @@ tidy(lm1)
 
 ### Example with risk ratios
 
-Retrospective cohort study: patients with high or low cholesterol, assessed for all-cause mortality (death).
-The amount of exercise is a potential confounder: it associated with both blood cholesterol and death
+Retrospective cohort study: patients with high or low cholesterol, monitored for 12 months and then assessed for all-cause mortality (death).
+The amount of **exercise during the 12-month period of follow-up** is a potential confounder: it associated with both blood cholesterol and death
 (e.g. more physical exercise $\rightarrow$ lower cholesterol and lower death rate), and it is not in the causal path
 between blood cholesterol and risk death.
-
 
 ![confounder_example](confounder.jpeg)
 <span>Figure from: https://rpubs.com/mbounthavong/confounding_interaction</span>
@@ -174,7 +173,7 @@ Table2
 ```
 
 ```{r}
-res <- riskratio.wald(Table2, rev = c("both"))
+res <- oddsratio.wald(Table2, rev = c("both"))
 
 writeLines(" - Estimated risk ratio")
 print(res$measure)
@@ -194,7 +193,7 @@ Table3
 ```
 
 ```{r}
-res <- riskratio.wald(Table3, rev = c("both"))
+res <- oddsratio.wald(Table3, rev = c("both"))
 
 writeLines(" - Estimated risk ratio")
 print(res$measure)
@@ -222,7 +221,7 @@ Table4
 
 
 ```{r}
-res <- riskratio.wald(Table4, rev = c("both"))
+res <- oddsratio.wald(Table4, rev = c("both"))
 
 writeLines(" - Estimated risk ratio")
 print(res$measure)
@@ -242,7 +241,7 @@ Table5
 ```
 
 ```{r}
-res <- riskratio.wald(Table5, rev = c("both"))
+res <- oddsratio.wald(Table5, rev = c("both"))
 
 writeLines(" - Estimated risk ratio")
 print(res$measure)
@@ -251,33 +250,54 @@ writeLines(" - p-value")
 res$p.value
 ```
 
-Compared to the crude analysis where the RR = 1.22 (and the OR = 1.25), the stratified results are much higher. t
+Compared to the crude analysis where the OR = 1.25 (and the RR = 1.22), the stratified results are much higher.
 This suggests that `Exercise` has a confounding effect on the relationship between blood cholesterol and risk of death. 
 When we stratify by exercise, we get a stronger measure of association between `X` and `Y`. 
 
-It would be convenient to have a way to get an estimate of the X-Y association adjusted for confounding, without having to go through the complications of the stratified analysis: this is the **Mantel-Haenszel (M-H)** test/metric.
+It would be convenient to have a way to get an estimate of the X-Y association adjusted for confounding, without having to go through the complications of the stratified analysis: this is the **Mantel-Haenszel (M-H)** metric, obtained by summing over strata:
+
+$$
+\text{OR_{M-H adjusted}} = \left( \sum_{k=1}^K \frac{(a_k \cdot d_k)/ n_k}{(c_k \cdot b_k) / n_k} \right) \cdot \frac{1}{K}
+$$
+
+where $a,b,c,d$ are the cells of the contingency table: a: high-chol deaths; b: high-chol survs;
+c: low-chol deaths; d: low-chols survs.
+$n_k$ is the total number of records in each stratum $k$.
 
 ```{r}
 matrix.array <- array(c(Table4, Table5), dim = c(2, 2, 2))
+matrix.array
+```
+
+```{r}
+or_mh = ( ((150*800)/2600)/((50*1600)/2600) + ((100*700)/1300)/((100*400)/1300) ) / 2
+or_mh = ( (150*800)/(50*1600) + (100*700)/(100*400) ) / 2 ## simplifying the total number of observations in the expression 
+```
+
+All these calculations can be done more easily using the `epi.2by2()` function from the `epiR` package:
+
+```{r}
 epi.2by2(matrix.array)
 ```
 
+<span style="color:red">Better still, one can use a **logistic regression model**, include the confounding effect(s) and then look at the model coefficients to get the adjusted log-odds and odds ratios (and relative risks) for the exposure/treatment under investigation (e.g. OR of one-unit increase in exposure, or of belonging to one class or the other of the exposure).</span>
 
 ### Solutions
 
-Confounding control can occur at the design stage through: i) randomization, ii) restriction or iii) matching. 
-At the analysis stage, confounding control can be managed by: i) standardization, ii) stratification or iii) standard multivariable regression.
+Confounding control can occur at the design stage through: 
 
-More advanced approaches include: i) structural causal models, ii) directed acyclic graphs (DAGs), iii) propensity scores, 
-iv) marginal structural models with inverse probability weighting, and v) quasi experimental methods such as instrumental variables (e.g. Mendelian Randomization in clinical trials).
+1. randomization: e.g. RCT
+2. restriction: i.e. use only one value of the potential confounder to recruit subjects (e.g. only females)
+3. matching: i.e. match (balance) exposed / non-exposed by values of the confounder
 
-During experiment design phase:
-- randomization
-- restriction / exclusion
-- matching
-- stratification
+At the analysis stage, confounding control can be managed by:
 
-During analysis phase:
-- stratified analysis
-- multivariate analysis
+1. standardization: e.g. normalize by age, body weight etc. (useful with continuous confounders)
+2. stratification: e.g. stratified analysis (as seen above)
+3. multivariable regression (linear, logistic, cox, etc.): include confounders in the statistical model
+
+More advanced approaches include: i) structural causal models; ii) directed acyclic graphs (DAGs); iii) propensity scores; 
+iv) marginal structural models with inverse probability weighting; v) quasi experimental methods such as instrumental variables (e.g. Mendelian Randomization in clinical trials).
+
+
 
