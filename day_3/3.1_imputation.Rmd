@@ -1,0 +1,104 @@
+---
+title: 'Imputation of missing data'
+author: "Nelson Nazzicari"
+date: "2024-11-07"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+# library("DT")
+# library("broom")
+# library("knitr")
+# library("ggpubr")
+# library("contrast")
+# library("tidyverse")
+library("data.table")
+
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## Read the data
+
+Data from [The early bird gets the worm: foraging strategies of wild songbirds lead to the early discovery of food sources](https://royalsocietypublishing.org/doi/10.1098/rsbl.2013.0578)
+(data repo [here](https://zenodo.org/record/4936819))
+
+It's data on time needed to discover food sources in songbirds.
+
+```{r read-the-bird-data}
+basefolder = "/home/filippo/Dropbox/cursos/longitudinal_data_analysis/longitudinal_data_analysis"
+basefolder = "~/research/longitudinal_data_analysis"
+inpfile = "data/bird_food/discovery_individuals.csv"
+fname = file.path(basefolder, inpfile)
+
+birds = fread(fname)
+```
+
+Dataset on wild songbirds and their foraging habits (from here: "The early bird gets the worm", https://zenodo.org/record/4936819).
+
+The target variable is *time to discovery* (of food: continuous, in seconds).
+Explanatory variables include:
+
+- `TREATMENT`: morning / afternoon
+- `HALFHOUR`: time during the day
+- `SITE`: geographic place
+- `WEEK`: replicates over two weeks
+
+
+We can consider *week* to be a replicate of the experiment (two different weeks, like two random replicates),
+and we can combine the part of the day (morning/afternoon) and half hour to have a unique expression of the time of the day.
+
+This will lead to the following model.
+
+$$
+\text{TIME.TO.DISC} = \mu + time + \beta_1 \text{time} + \beta_2 \text{SITE} + e
+$$
+
+## Helper functions
+
+```{r helper_functions}
+inject_missing_datapoints = function(x, fraction = 0.1){
+  #how many actual missing points we'll have
+  n = len(x) * fraction
+  
+  #sampling that many 
+  holes = sample(1:len(x), size=n, replace=FALSE)
+  
+  #and we are done
+  x[holes] = NA
+  return(x)
+}
+
+RMSE = function(y, yhat){
+  res = (y - yhat) ^ 2
+  res = sqrt(mean(res))
+  return(res)
+}
+```
+
+### Task 1: inject missing data point
+
+```{r}
+## your code here!
+```
+
+### Task 2: evaluate RFi
+
+```{r}
+## your code here!
+```
+
+### Task 3: evaluate KNNi
+
+```{r}
+## your code here!
+```
+
+### Task 4: evaluate xxx
+
+```{r}
+## your code here!
+```
+
+
+
