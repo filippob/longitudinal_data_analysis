@@ -45,16 +45,6 @@ Explanatory variables include:
 - `SITE`: geographic place
 - `WEEK`: replicates over two weeks
 
-
-We can consider *week* to be a replicate of the experiment (two different weeks, like two random replicates),
-and we can combine the part of the day (morning/afternoon) and half hour to have a unique expression of the time of the day.
-
-This will lead to the following model.
-
-$$
-\text{TIME.TO.DISC} = \mu + time + \beta_1 \text{time} + \beta_2 \text{SITE} + e
-$$
-
 ## Helper functions
 
 ```{r helper_functions}
@@ -171,31 +161,25 @@ plot(res_m[,c('missing_rate', 'RMSE')], type='b')
 
 ### Go faster with parallel execution
 
-Imputing the same dataset, a few times, to have an idea about time improvement
-due to parallel execution
-
-
+Imputing the same dataset with and without parallel execution (very safe hypothesis: 2 cores 
+available).
 
 ```{r}
 #non-parallel execution
 start_time = Sys.time()
-for (i in 1:10){
-     birds_imputed = missForest(birds_missing)$ximp
-}
+birds_imputed = missForest(birds_missing)$ximp
 stop_time = Sys.time()
 print(stop_time - start_time)
 ```
 
 ```{r message=FALSE}
 #parallel execution
-doParallel::registerDoParallel(cores=4)
+doParallel::registerDoParallel(cores=2)
 start_time = Sys.time()
-for (i in 1:10){
-     birds_imputed = missForest(birds_missing, parallelize = 'forest')$ximp
-}
+birds_imputed = missForest(birds_missing, parallelize = 'forest')$ximp
 stop_time = Sys.time()
 print(stop_time - start_time)
 ```
 
-Uh-oh...
+Uh-oh... What's happening?
 
