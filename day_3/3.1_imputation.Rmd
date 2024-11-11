@@ -13,6 +13,7 @@ output: html_document
 # library("contrast")
 # library("tidyverse")
 library("data.table")
+library(plyr)
 
 knitr::opts_chunk$set(echo = TRUE)
 ```
@@ -28,10 +29,10 @@ It's data on time needed to discover food sources in songbirds.
 ```{r read-the-bird-data}
 basefolder = "/home/filippo/Dropbox/cursos/longitudinal_data_analysis/longitudinal_data_analysis"
 basefolder = "~/research/longitudinal_data_analysis"
-inpfile = "data/bird_food/discovery_individuals.csv"
+inpfile = "../data/bird_food/discovery_individuals.csv"
 fname = file.path(basefolder, inpfile)
 
-birds = fread(fname)
+birds = fread(inpfile)
 ```
 
 Dataset on wild songbirds and their foraging habits (from here: "The early bird gets the worm", https://zenodo.org/record/4936819).
@@ -59,10 +60,10 @@ $$
 ```{r helper_functions}
 inject_missing_datapoints = function(x, fraction = 0.1){
   #how many actual missing points we'll have
-  n = len(x) * fraction
+  n = length(x) * fraction
   
   #sampling that many 
-  holes = sample(1:len(x), size=n, replace=FALSE)
+  holes = sample(1:length(x), size=n, replace=FALSE)
   
   #and we are done
   x[holes] = NA
@@ -76,29 +77,125 @@ RMSE = function(y, yhat){
 }
 ```
 
-### Task 1: inject missing data point
+### RFi - a simple implementation
+
+We are going to inject a 10% of missing data point, impute with RFi, and evaluate the error rate
 
 ```{r}
-## your code here!
-```
+MISSING_RATE = 0.1
 
-### Task 2: evaluate RFi
+#the dataset with missing elements
+birds_missing = birds
+birds_missing$TIME.TO.DISC. = inject_missing_datapoints(x = birds_missing$TIME.TO.DISC., fraction = MISSING_RATE)
+
+#plotting 
+plot(birds$TIME.TO.DISC., xlab='', ylab='Time to discovery')
+points(birds_missing$TIME.TO.DISC., pch=4, col='red')
+
+#a little interface printing
+print(paste('Number of samples:', nrow(birds)))
+print(paste('Number of missing values:', sum(is.na(birds_missing$TIME.TO.DISC.))))
+```
 
 ```{r}
-## your code here!
+#actual imputation
+library(missForest)
+
+#a little type wrangling: character columns are not welcome by missForest. Either
+#change it to numeric or, in our case, factors
+birds_missing$TAG = as.factor(birds_missing$TAG)
+birds_missing$SITE = as.factor(birds_missing$SITE)
+birds_missing$TREATMENT = as.factor(birds_missing$TREATMENT)
+
+#too many tags...
+birds_missing$TAG = NULL
+
+#imputing. Of the output we focus on the $ximp field, which is our old matrix, but
+#imputed
+birds_imputed = missForest(birds_missing)$ximp
+
+#plotting only missing and imputed values
+sel = is.na(birds_missing$TIME.TO.DISC.)
+plot(birds[sel]$TIME.TO.DISC., xlab='', ylab='Time to discovery', main='True (o) vs imputed (*)')
+points(birds_imputed[sel]$TIME.TO.DISC., pch=8, col='blue')
+
+#evaluating the RMSE
+RMSE(y=birds$TIME.TO.DISC., yhat = birds_imputed$TIME.TO.DISC.)
 ```
 
-### Task 3: evaluate KNNi
+### A more systematic evaluation
+
+We want to test RFi:
+
+- over a few repetitions, so that we don't depend on specific missing samples
+- over a range of injected data, so to have an idea of when missing rate becomes too much 
 
 ```{r}
-## your code here!
+REPETITIONS = 10
+MISSING_RATES = c(0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.50, 0.70)
+
+res = NULL
+
+for (rep in 1:REPETITIONS){
+  for (mr in MISSING_RATES){
+    #preparing the dataset
+    birds_missing = birds
+    birds_missing$TIME.TO.DISC. = inject_missing_datapoints(x = birds_missing$TIME.TO.DISC., fraction = mr)
+    birds_missing$SITE = as.factor(birds_missing$SITE)
+    birds_missing$TREATMENT = as.factor(birds_missing$TREATMENT)
+    birds_missing$TAG = NULL
+
+    #imputing
+    birds_imputed = missForest(birds_missing)$ximp
+
+    #computing RMSE
+    error = RMSE(y=birds$TIME.TO.DISC., yhat = birds_imputed$TIME.TO.DISC.)
+      
+    #taking notes of the result
+    res = rbind(res, data.frame(
+      algorithm = 'RFi',
+      missing_rate = mr,
+      RMSE = error 
+    ))
+  }
+}
+
+#averaging over repetitions
+res_m = ddply(res, .(algorithm, missing_rate), function(x){
+  return(data.frame(RMSE = mean(x$RMSE)))
+})
+
+plot(res_m[,c('missing_rate', 'RMSE')], type='b')
+
 ```
 
-### Task 4: evaluate xxx
+### Go faster with parallel execution
+
+Imputing the same dataset, a few times, to have an idea about time improvement
+due to parallel execution
+
+
 
 ```{r}
-## your code here!
+#non-parallel execution
+start_time = Sys.time()
+for (i in 1:10){
+     birds_imputed = missForest(birds_missing)$ximp
+}
+stop_time = Sys.time()
+print(stop_time - start_time)
 ```
 
+```{r message=FALSE}
+#parallel execution
+doParallel::registerDoParallel(cores=4)
+start_time = Sys.time()
+for (i in 1:10){
+     birds_imputed = missForest(birds_missing, parallelize = 'forest')$ximp
+}
+stop_time = Sys.time()
+print(stop_time - start_time)
+```
 
+Uh-oh...
 
