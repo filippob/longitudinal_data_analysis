@@ -93,11 +93,10 @@ library(missForest)
 
 #a little type wrangling: character columns are not welcome by missForest. Either
 #change it to numeric or, in our case, factors
-birds_missing$TAG = as.factor(birds_missing$TAG)
 birds_missing$SITE = as.factor(birds_missing$SITE)
 birds_missing$TREATMENT = as.factor(birds_missing$TREATMENT)
 
-#too many tags...
+#too many tags... (max accepted is 53)
 birds_missing$TAG = NULL
 
 #imputing. Of the output we focus on the $ximp field, which is our old matrix, but
