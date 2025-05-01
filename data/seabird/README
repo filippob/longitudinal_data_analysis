@@ -3,11 +3,28 @@ https://zenodo.org/record/5010983
 
 Data from: Age-dependent trait variation: the relative contribution of within-individual change, selective appearance and disappearance in a long-lived seabird
 
-1. Within populations, the expression of phenotypic traits typically varies with age. Such age-dependent trait variation can be caused by within-individual change (improvement, senescence, terminal effects) and/or selective (dis)appearance of certain phenotypes among older age classes. 
+1. Within populations, the expression of phenotypic traits typically varies with age. 
+Such age-dependent trait variation can be caused by within-individual change (improvement, senescence, terminal effects) and/or selective (dis)appearance of certain phenotypes among older age classes. 
 
-2. within-individual change and selective (dis)appearance, in a long-lived seabird, the common tern (Sterna hirundo). 
+2. In this study we applied two methods (decomposition and mixed-modelling) to attribute age-dependent variation in seven phenological and reproductive traits to within-individual change and 
+selective (dis)appearance, in a long-lived seabird, the common tern (Sterna hirundo). 
 
-3. At the population level, all traits, except the probability to breed, improved with age (i.e., phenology advanced and reproductive output increased). Both methods identified within-individual change as the main responsible process, and within individuals, performance improved until age 6-13, before levelling off. In contrast, within individuals, breeding probability decreased to age 10, then levelled off. 
+3. At the population level, all traits, except the probability to breed, improved with age (i.e., phenology advanced and reproductive output increased). 
+Both methods identified within-individual change as the main responsible process, and within individuals, performance improved until age 6-13, before levelling off. 
+In contrast, within individuals, breeding probability decreased to age 10, then levelled off. 
+
+4. Effects of selective appearance and disappearance were small, but showed that longer-lived individuals had a higher breeding probability and bred earlier, 
+and that younger recruits performed better throughout life than older recruits in terms of both phenology and reproductive performance. 
+In the year prior to death, individuals advanced reproduction, suggesting terminal investment. 
+
+5. The decomposition method attributed more age-dependent trait variation to selective disappearance than the mixed-modelling method: 14-36% versus 0-8%, respectively, 
+which we identify to be due to covariance between rates of within-individual change and selective (dis)appearance leading to biased results from the decomposition method. 
+
+6. We conclude that the decomposition method is ideal for visualising processes underlying population change in performance from one age class to the next, 
+but that a mixed-modelling method is required to investigate the significance and relative contribution of age-effects. 
+
+7. Considerable variation in the contribution of the different age-processes between the seven phenotypic traits studied, 
+as well as notable differences between species in patterns of age-dependent trait expression, calls for better predictions regarding optimal allocation strategies with age.
 
 OPTIONS:
 - look at males vs females across time
