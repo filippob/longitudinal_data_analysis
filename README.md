@@ -37,7 +37,7 @@ As a general rule, we'll have a longer break (30 minutes) at about 16:30-17:00 a
     - [3.repeated_records.ipynb](day_1/3.repeated_records.ipynb)
 - Lecture 4: [Difference-in-differences (diff-in-diff)](slides/4.difference_in_differences.pdf) [Filippo]
 - Lab 4: diff-in-diff in R
-    - [4.diff-in-diff.ipynb](day_2/4.diff-in-diff.ipynb)
+    - [4.diff-in-diff.ipynb](day_2/4.diff_in_diff.ipynb)
 - Lecture 5: [Censored data and survival analysis](slides/5.censored_data_and_survival_analysis.pdf)
 - Lab 5: Survival analysis in R
     - [5.survival_analysis.Rmd](day_2/5.survival_analysis.Rmd)
