@@ -21,9 +21,10 @@ As a general rule, we'll have a longer break (30 minutes) at about 16:30-17:00 a
     - [0.basic_python.ipynb](day_1/0.basic_python.ipynb)
 - Lab 1: First encounter with longitudinal data [Filippo]
     - [1.longitudinal_data.ipynb](day_1/1.longitudinal_data.ipynb)
+    - [1.2.confounding.ipynb](day_1/1.2.confounding.ipynb)
 - Lecture 2: [The basic experimental setting: treatments and timepoints](slides/2.treatments_and_timepoints.pdf) [Filippo]
 - Lab 2: Treatments and timepoints in R [Filippo]
-    - [2.1.treatments_and_timepoints.Rmd](day_1/2.1.treatments_and_timepoints.Rmd)
+    - [2.1.treatments_and_timepoints.ipynb](day_1/2.1.treatments_and_timepoints.ipynb)
     - [2.2.exercise.Rmd](day_1/2.2.exercise.Rmd)
     - [2.3.linear_regression_with_tidymodels.Rmd](day_1/2.3.linear_regression_with_tidymodels.Rmd)
 - Lecture 3: [Analysis of repeated records](slides/3.repeated_records.pdf) [Filippo]
