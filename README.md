@@ -20,7 +20,7 @@ As a general rule, we'll have a longer break (30 minutes) at about 16:30-17:00 a
 - Lab 0: Brushing up basic Python [Filippo]
     - [0.basic_python.ipynb](day_1/0.basic_python.ipynb)
 - Lab 1: First encounter with longitudinal data [Filippo]
-    - [1.longitudinal_data.Rmd](day_1/1.longitudinal_data.ipynb)
+    - [1.longitudinal_data.ipynb](day_1/1.longitudinal_data.ipynb)
 - Lecture 2: [The basic experimental setting: treatments and timepoints](slides/2.treatments_and_timepoints.pdf) [Filippo]
 - Lab 2: Treatments and timepoints in R [Filippo]
     - [2.1.treatments_and_timepoints.Rmd](day_1/2.1.treatments_and_timepoints.Rmd)
