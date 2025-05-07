@@ -42,9 +42,9 @@ As a general rule, we'll have a longer break (30 minutes) at about 16:30-17:00 a
 **Day 3**
 
 - Lecture 5: [Cross-validation: simple and with spatial, temporal (or other) data structure](slides/6.cross-validation_with_data_structure.pdf)
-- Lab 5: Cross-validation strategies in R
-    - [6.1.cross_validation.Rmd](day_2/6.1.cross_validation.Rmd)
-    - [6.2.block_cross_validation.Rmd](day_2/6.2.block_cross_validation.Rmd)
+- Lab 5: Cross-validation strategies in Python
+    - [5.1.cross_validation.ipynb](day_3/5.1.cross_validation.ipynb)
+    - [5.2.block_cross_validation.ipynb](day_3/5.2.block_cross_validation.ipynb)
  
 **Day 4**
 
