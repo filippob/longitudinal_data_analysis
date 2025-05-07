@@ -52,7 +52,7 @@ As a general rule, we'll have a longer break (30 minutes) at about 16:30-17:00 a
 - Lab 6: Time series and forecasting in Python
     - [6.1.time_series_and_autocorrelations.ipynb](day_4/6.1.time_series_and_autocorrelations.ipynb)
     - [6.2.forecasting.ipynb](day_4/6.2.forecasting.ipynb)
-- [OPTIONAL]
+[OPTIONAL]
 - Lectures:
     - [Censored data and survival analysis](slides/5.censored_data_and_survival_analysis.pdf)
 - Labs:
