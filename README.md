@@ -1,7 +1,7 @@
 # Analysis of longitudinal data
-Scripts for the analysis of longitudinal data in R
+Scripts for the analysis of longitudinal data in Python
 
-**Material for the Course "Introduction to the analysis of longitudinal data with R"**
+**Material for the Course "Machine learning for longitudinal data with Python"**
 
 Instructors: *Filippo Biscarini, Nelson Nazzicari*
 
@@ -15,7 +15,7 @@ As a general rule, we'll have a longer break (30 minutes) at about 16:30-17:00 a
 **Day 1**
 
 - Lecture 0: General Introduction / Overview of the Course [Filippo]
-    - [General Introduction](slides/1.introduction.pdf)
+    - [General Introduction](slides/)
 - Lecture 1: [Longitudinal data: examples and challenges](slides/1.longitudinal_data.pdf) [Filippo]
 - Lab 0: Brushing up basic Python [Filippo]
     - [0.basic_python.ipynb](day_1/0.basic_python.ipynb)
@@ -52,7 +52,8 @@ As a general rule, we'll have a longer break (30 minutes) at about 16:30-17:00 a
 - Lab 6: Time series and forecasting in Python
     - [6.1.time_series_and_autocorrelations.ipynb](day_4/6.1.time_series_and_autocorrelations.ipynb)
     - [6.2.forecasting.ipynb](day_4/6.2.forecasting.ipynb)
-- [OPTIONAL]
+
+[OPTIONAL]
 - Lectures:
     - [Censored data and survival analysis](slides/5.censored_data_and_survival_analysis.pdf)
 - Labs:
