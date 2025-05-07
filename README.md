@@ -15,7 +15,7 @@ As a general rule, we'll have a longer break (30 minutes) at about 16:30-17:00 a
 **Day 1**
 
 - Lecture 0: General Introduction / Overview of the Course [Filippo]
-    - [General Introduction](slides/1.introduction.pdf)
+    - [General Introduction](slides/)
 - Lecture 1: [Longitudinal data: examples and challenges](slides/1.longitudinal_data.pdf) [Filippo]
 - Lab 0: Brushing up basic Python [Filippo]
     - [0.basic_python.ipynb](day_1/0.basic_python.ipynb)
