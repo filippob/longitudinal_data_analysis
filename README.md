@@ -27,12 +27,12 @@ As a general rule, we'll have a longer break (30 minutes) at about 16:30-17:00 a
     - [2.treatments_and_timepoints.ipynb](day_1/2.treatments_and_timepoints.ipynb)
     <!-- - [2.2.exercise.Rmd](day_1/2.2.exercise.Rmd)
     - [2.3.linear_regression_with_tidymodels.Rmd](day_1/2.3.linear_regression_with_tidymodels.Rmd) -->
-- Lecture 3: [Analysis of repeated records](slides/3.repeated_records.pdf) [Filippo]
 - Lecture XX: [The machine learning perspective - part 1](slides/) [Nelson]
 
  
 **Day 2**
 
+- Lecture 3: [Analysis of repeated records](slides/3.repeated_records.pdf) [Filippo]
 - Lab 3: Models to analyse data with repeated records over time (multiple time points) and space (multiple locations) in R
     - [3.repeated_records.ipynb](day_1/3.repeated_records.ipynb)
 - Lecture 4: [Difference-in-differences (diff-in-diff)](slides/4.difference_in_differences.pdf) [Filippo]
