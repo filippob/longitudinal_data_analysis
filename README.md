@@ -1,7 +1,7 @@
 # Analysis of longitudinal data
-Scripts for the analysis of longitudinal data in R
+Scripts for the analysis of longitudinal data in Python
 
-**Material for the Course "Introduction to the analysis of longitudinal data with R"**
+**Material for the Course "Introduction to the analysis of longitudinal data with Python"**
 
 Instructors: *Filippo Biscarini, Nelson Nazzicari*
 
