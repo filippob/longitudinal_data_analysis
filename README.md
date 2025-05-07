@@ -49,10 +49,12 @@ As a general rule, we'll have a longer break (30 minutes) at about 16:30-17:00 a
 **Day 4**
 
 - Lecture 6: [Time series and forecasting](slides/7.time_series_and_forecasting.pdf)
-- Lab 6: Time series and forecasting in R
-    - [7.1.time_series_and_autocorrelations.Rmd](day_2/7.1.time_series_and_autocorrelations.Rmd)
-    - [7.2.forecasting.Rmd](day_2/7.2.forecasting.Rmd)
-    - [7.3.time_series_with_tidymodels.Rmd](day_2/7.3.time_series_with_tidymodels.Rmd)
-- Lecture 5: [Censored data and survival analysis](slides/5.censored_data_and_survival_analysis.pdf)
-- Lab 5: Survival analysis in R
+- Lab 6: Time series and forecasting in Python
+    - [6.1.time_series_and_autocorrelations.ipynb](day_4/6.1.time_series_and_autocorrelations.ipynb)
+    - [6.2.forecasting.ipynb](day_4/6.2.forecasting.ipynb)
+- [OPTIONAL]
+- Lectures:
+    - [Censored data and survival analysis](slides/5.censored_data_and_survival_analysis.pdf)
+- Labs:
     - [5.survival_analysis.Rmd](day_2/5.survival_analysis.Rmd)
+    - [7.3.time_series_with_tidymodels.Rmd](day_2/7.3.time_series_with_tidymodels.Rmd)
