@@ -32,7 +32,7 @@ As a general rule, we'll have a longer break (30 minutes) at about 16:30-17:00 a
 - Lecture 2: [The basic experimental setting: treatments and timepoints](slides/2.treatments_and_timepoints.pdf) [Filippo]
 - Lab 2: Treatments and timepoints in R [Filippo]
     - [2.treatments_and_timepoints.ipynb](day_1/2.treatments_and_timepoints.ipynb)
-    <!-- - [2.2.exercise.Rmd](day_1/2.2.exercise.Rmd)
+    <!-- - [2.2.exercise.Rmd](day_1/2.2.exercise.Rmd) -->
 - Lecture 3: [Analysis of repeated records](slides/3.repeated_records.pdf) [Filippo]
 - Lab 3: Models to analyse data with repeated records over time (multiple time points) and space (multiple locations) in R
     - [3.repeated_records.ipynb](day_2/3.repeated_records.ipynb)
