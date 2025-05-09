@@ -44,7 +44,7 @@ As a general rule, we'll have a longer break (30 minutes) at about 16:30-17:00 a
 - Lecture 4: [Difference-in-differences (diff-in-diff)](slides/4.difference_in_differences.pdf) [Filippo]
 - Lab 4: diff-in-diff in R
     - [4.diff-in-diff.ipynb](day_2/4.diff_in_diff.ipynb)
-- Lecture 5: [Cross-validation: simple and with spatial, temporal (or other) data structure](slides/6.cross-validation_with_data_structure.pdf)
+- Lecture 5: [Cross-validation: simple and with spatial, temporal (or other) data structure](slides/5.cross-validation_with_data_structure.pdf)
 - Lab 5: Cross-validation strategies in Python
     - [5.1.cross_validation.ipynb](day_3/5.1.cross_validation.ipynb)
     - [5.2.block_cross_validation.ipynb](day_3/5.2.block_cross_validation.ipynb)
@@ -53,7 +53,7 @@ As a general rule, we'll have a longer break (30 minutes) at about 16:30-17:00 a
 **Day 4**
 
 - Lecture XX: [Model diagnostics and feature importance](slides/) [Nelson]
-- Lecture 6: [Time series and forecasting](slides/7.time_series_and_forecasting.pdf)
+- Lecture 6: [Time series and forecasting](slides/6.time_series_and_forecasting.pdf)
 - Lab 6: Time series and forecasting in Python
     - [6.1.time_series_and_autocorrelations.ipynb](day_4/6.1.time_series_and_autocorrelations.ipynb)
     - [6.2.forecasting.ipynb](day_4/6.2.forecasting.ipynb)
