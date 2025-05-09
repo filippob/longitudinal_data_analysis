@@ -16,15 +16,12 @@ As a general rule, we'll have a longer break (30 minutes) at about 16:30-17:00 a
 
 - Lecture 0: General Introduction / Overview of the Course [Filippo]
     - [General Introduction](slides/)
-- Lecture 1: [Longitudinal data: examples and challenges](slides/1.longitudinal_data.pdf) [Filippo]
+- Lecture 1: [Longitudinal data: examples, challenges, biases](slides/1.longitudinal_data.pdf) [Filippo]
 - Lab 0: Brushing up basic Python [Filippo]
     - [0.basic_python.ipynb](day_1/0.basic_python.ipynb)
 - Lab 1: First encounter with longitudinal data [Filippo]
     - [1.longitudinal_data.ipynb](day_1/1.longitudinal_data.ipynb)
     - [1.2.confounding.ipynb](day_1/1.2.confounding.ipynb)
-- Lecture 2: [The basic experimental setting: treatments and timepoints](slides/2.treatments_and_timepoints.pdf) [Filippo]
-- Lab 2: Treatments and timepoints in R [Filippo]
-    - [2.treatments_and_timepoints.ipynb](day_1/2.treatments_and_timepoints.ipynb)
     <!-- - [2.2.exercise.Rmd](day_1/2.2.exercise.Rmd)
     - [2.3.linear_regression_with_tidymodels.Rmd](day_1/2.3.linear_regression_with_tidymodels.Rmd) -->
 - Lecture XX: [The machine learning perspective - part 1](slides/) [Nelson]
@@ -32,27 +29,36 @@ As a general rule, we'll have a longer break (30 minutes) at about 16:30-17:00 a
  
 **Day 2**
 
+- Lecture 2: [The basic experimental setting: treatments and timepoints](slides/2.treatments_and_timepoints.pdf) [Filippo]
+- Lab 2: Treatments and timepoints in R [Filippo]
+    - [2.treatments_and_timepoints.ipynb](day_1/2.treatments_and_timepoints.ipynb)
+    <!-- - [2.2.exercise.Rmd](day_1/2.2.exercise.Rmd) -->
 - Lecture 3: [Analysis of repeated records](slides/3.repeated_records.pdf) [Filippo]
 - Lab 3: Models to analyse data with repeated records over time (multiple time points) and space (multiple locations) in R
     - [3.repeated_records.ipynb](day_2/3.repeated_records.ipynb)
-- Lecture 4: [Difference-in-differences (diff-in-diff)](slides/4.difference_in_differences.pdf) [Filippo]
-- Lab 4: diff-in-diff in R
-    - [4.diff-in-diff.ipynb](day_2/4.diff_in_diff.ipynb)
+- Lecture XX: [The machine learning perspective - part 2](slides/) [Nelson]
+- Lecture XX: [Imputation of missing longitudinal data](slides/) [Nelson]
  
 **Day 3**
 
+- Lecture 4: [Difference-in-differences (diff-in-diff)](slides/4.difference_in_differences.pdf) [Filippo]
+- Lab 4: diff-in-diff in R
+    - [4.diff-in-diff.ipynb](day_2/4.diff_in_diff.ipynb)
 - Lecture 5: [Cross-validation: simple and with spatial, temporal (or other) data structure](slides/6.cross-validation_with_data_structure.pdf)
 - Lab 5: Cross-validation strategies in Python
     - [5.1.cross_validation.ipynb](day_3/5.1.cross_validation.ipynb)
     - [5.2.block_cross_validation.ipynb](day_3/5.2.block_cross_validation.ipynb)
+- Lecture XX: [Neural networks and Transformers](slides/) [Nelson]
  
 **Day 4**
 
+- Lecture XX: [Model diagnostics and feature importance](slides/) [Nelson]
 - Lecture 6: [Time series and forecasting](slides/7.time_series_and_forecasting.pdf)
 - Lab 6: Time series and forecasting in Python
     - [6.1.time_series_and_autocorrelations.ipynb](day_4/6.1.time_series_and_autocorrelations.ipynb)
     - [6.2.forecasting.ipynb](day_4/6.2.forecasting.ipynb)
-
+- Lecture XX: [Omics case study](slides/) [Nelson]
+- 
 [OPTIONAL]
 - Lectures:
     - [Censored data and survival analysis](slides/5.censored_data_and_survival_analysis.pdf)
