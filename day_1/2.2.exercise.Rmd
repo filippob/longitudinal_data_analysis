@@ -27,6 +27,7 @@ It's data on time needed to discover food sources in songbirds.
 
 ```{r read-the-bird-data}
 basefolder = "/home/filippo/Dropbox/cursos/longitudinal_data_analysis/longitudinal_data_analysis"
+basefolder = "~/research/longitudinal_data_analysis"
 inpfile = "data/bird_food/discovery_individuals.csv"
 fname = file.path(basefolder, inpfile)
 
